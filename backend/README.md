@@ -18,6 +18,9 @@ backend/
 |   `-- verify-payment.php
 |-- config/
 |   `-- db.php
+|-- database/
+|   |-- sample-data.sql
+|   `-- schema.sql
 |-- middleware/
 |   `-- README.md
 |-- models/
@@ -34,6 +37,7 @@ backend/
 
 - `api/` stores endpoint files that handle incoming payment-related requests.
 - `config/` stores database and application configuration files.
+- `database/` stores SQL schema and sample data for local setup and future integration.
 - `middleware/` stores request filters such as authentication, validation, or logging layers.
 - `models/` stores data models and database-facing structures.
 - `routes/` stores route definitions if routing is separated later.
