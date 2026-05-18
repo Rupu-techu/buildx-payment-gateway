@@ -11,7 +11,6 @@ CREATE TABLE transactions (
     status ENUM('pending', 'successful', 'failed') NOT NULL DEFAULT 'pending' COMMENT 'Current payment lifecycle status',
     gateway_response JSON NULL COMMENT 'Raw or structured response returned by the payment gateway',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Record creation timestamp',
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Last status or record update timestamp',
     INDEX idx_order_id (order_id),
     INDEX idx_payment_id (payment_id),
     INDEX idx_user_id (user_id),
