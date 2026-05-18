@@ -1,0 +1,31 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor settings
+.vscode/
+.idea/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+
+# Frontend dependencies and builds
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+
+# Backend dependencies
+backend/vendor/
+
+# Coverage and cache
+coverage/
+.cache/
