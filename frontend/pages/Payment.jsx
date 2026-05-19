@@ -194,7 +194,7 @@ function Payment({
               ...paymentStyles.layout,
               gridTemplateColumns: isCompact
                 ? "minmax(0, 1fr)"
-                : "minmax(0, 1.05fr) minmax(300px, 0.95fr)",
+                : "minmax(0, 1.08fr) minmax(360px, 0.92fr)",
             }}
           >
             <div style={paymentStyles.leftColumn}>
@@ -298,14 +298,14 @@ const paymentStyles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "24px",
+    padding: "40px 28px",
     background:
       "radial-gradient(circle at top, rgba(59, 130, 246, 0.16), transparent 30%), linear-gradient(180deg, #06121f 0%, #0b1728 48%, #08111d 100%)",
   },
   shell: {
     position: "relative",
     width: "100%",
-    maxWidth: "1140px",
+    maxWidth: "1280px",
   },
   glow: {
     position: "absolute",
@@ -320,26 +320,27 @@ const paymentStyles = {
   card: {
     position: "relative",
     overflow: "hidden",
-    borderRadius: "32px",
-    padding: "28px",
+    borderRadius: "36px",
+    padding: "36px",
     background: "rgba(8, 15, 27, 0.78)",
     border: "1px solid rgba(148, 163, 184, 0.16)",
     boxShadow: "0 28px 80px rgba(2, 6, 23, 0.55)",
     backdropFilter: "blur(18px)",
     color: "#f8fafc",
     display: "grid",
-    gap: "24px",
+    gap: "32px",
   },
   header: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    gap: "16px",
+    gap: "24px",
     flexWrap: "wrap",
   },
   headerLeft: {
     display: "grid",
-    gap: "8px",
+    gap: "12px",
+    maxWidth: "620px",
   },
   backButton: {
     border: "1px solid rgba(125, 211, 252, 0.22)",
@@ -377,8 +378,8 @@ const paymentStyles = {
   subtext: {
     margin: 0,
     color: "#94a3b8",
-    fontSize: "0.95rem",
-    lineHeight: 1.5,
+    fontSize: "1rem",
+    lineHeight: 1.7,
     maxWidth: "560px",
   },
   securePill: {
@@ -393,20 +394,20 @@ const paymentStyles = {
   },
   layout: {
     display: "grid",
-    gap: "20px",
+    gap: "28px",
     alignItems: "start",
   },
   leftColumn: {
     display: "grid",
-    gap: "18px",
+    gap: "24px",
   },
   rightColumn: {
     display: "grid",
-    gap: "18px",
+    gap: "24px",
   },
   productCard: {
-    padding: "24px",
-    borderRadius: "26px",
+    padding: "30px",
+    borderRadius: "30px",
     background:
       "linear-gradient(145deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.92) 60%, rgba(51, 65, 85, 0.9) 100%)",
     border: "1px solid rgba(148, 163, 184, 0.14)",
@@ -416,7 +417,7 @@ const paymentStyles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    gap: "16px",
+    gap: "20px",
   },
   productLabel: {
     margin: 0,
@@ -427,8 +428,8 @@ const paymentStyles = {
     textTransform: "uppercase",
   },
   productTitle: {
-    margin: "12px 0 6px",
-    fontSize: "1.4rem",
+    margin: "14px 0 8px",
+    fontSize: "1.46rem",
     fontWeight: 700,
     letterSpacing: "-0.03em",
   },
@@ -436,6 +437,7 @@ const paymentStyles = {
     margin: 0,
     color: "#cbd5e1",
     fontSize: "0.92rem",
+    lineHeight: 1.6,
   },
   chip: {
     padding: "10px 12px",
@@ -447,7 +449,7 @@ const paymentStyles = {
   },
   divider: {
     height: "1px",
-    margin: "22px 0",
+    margin: "28px 0",
     background:
       "linear-gradient(90deg, rgba(148, 163, 184, 0), rgba(148, 163, 184, 0.3), rgba(148, 163, 184, 0))",
   },
@@ -455,7 +457,7 @@ const paymentStyles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    gap: "16px",
+    gap: "24px",
     flexWrap: "wrap",
   },
   amountLabel: {
@@ -464,7 +466,7 @@ const paymentStyles = {
     fontSize: "0.88rem",
   },
   amountValue: {
-    margin: "8px 0 0",
+    margin: "12px 0 0",
     fontSize: "2.8rem",
     lineHeight: 0.95,
     letterSpacing: "-0.06em",
@@ -491,7 +493,8 @@ const paymentStyles = {
   },
   buttonWrap: {
     display: "grid",
-    gap: "14px",
+    gap: "18px",
+    paddingTop: "4px",
   },
   loaderWrap: {
     display: "flex",

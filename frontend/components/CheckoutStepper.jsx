@@ -60,31 +60,31 @@ function CheckoutStepper({ activeStep, compact = false }) {
 const wrapStyle = {
   display: "flex",
   flexWrap: "wrap",
-  gap: "12px",
+  gap: "18px",
   alignItems: "center",
 };
 
 const compactWrapStyle = {
   ...wrapStyle,
-  gap: "10px",
+  gap: "14px",
 };
 
 const stepRowStyle = {
   display: "flex",
   alignItems: "center",
-  gap: "12px",
-  flex: "1 1 220px",
+  gap: "16px",
+  flex: "1 1 250px",
   minWidth: "0",
 };
 
 const stepStyle = {
   display: "flex",
   alignItems: "center",
-  gap: "12px",
+  gap: "14px",
   minWidth: "0",
   flex: 1,
-  padding: "14px 16px",
-  borderRadius: "20px",
+  padding: "18px 20px",
+  borderRadius: "22px",
   border: "1px solid rgba(148, 163, 184, 0.12)",
   background: "linear-gradient(180deg, rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.3))",
   boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.03)",
@@ -130,20 +130,20 @@ const completeStepIndexStyle = {
 
 const stepLabelStyle = {
   color: "#f8fafc",
-  fontSize: "0.92rem",
+  fontSize: "0.96rem",
   fontWeight: 700,
   letterSpacing: "-0.02em",
 };
 
 const stepMetaStyle = {
   color: "#94a3b8",
-  fontSize: "0.78rem",
-  lineHeight: 1.4,
+  fontSize: "0.8rem",
+  lineHeight: 1.5,
 };
 
 const connectorStyle = {
   height: "1px",
-  flex: "0 0 36px",
+  flex: "0 0 48px",
   borderRadius: "999px",
 };
 

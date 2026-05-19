@@ -13,9 +13,9 @@ function OrderSummary({
     <section
       style={{
         display: "grid",
-        gap: "18px",
-        padding: "22px",
-        borderRadius: "24px",
+        gap: "24px",
+        padding: "28px",
+        borderRadius: "28px",
         background:
           "linear-gradient(180deg, rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.58))",
         border: "1px solid rgba(148, 163, 184, 0.14)",
@@ -71,10 +71,10 @@ function OrderSummary({
             style={{
               display: "flex",
               justifyContent: "space-between",
-              gap: "12px",
+              gap: "16px",
               alignItems: "center",
-              padding: "14px 16px",
-              borderRadius: "18px",
+              padding: "18px 20px",
+              borderRadius: "20px",
               backgroundColor: "rgba(255, 255, 255, 0.03)",
               border: "1px solid rgba(148, 163, 184, 0.08)",
             }}
@@ -111,9 +111,9 @@ function OrderSummary({
       <div
         style={{
           display: "grid",
-          gap: "10px",
-          padding: "16px",
-          borderRadius: "20px",
+          gap: "14px",
+          padding: "20px",
+          borderRadius: "22px",
           backgroundColor: "rgba(2, 6, 23, 0.35)",
           border: "1px solid rgba(148, 163, 184, 0.1)",
         }}
@@ -142,13 +142,13 @@ function OrderSummary({
 
       <div
         style={{
-          padding: "16px",
-          borderRadius: "20px",
+          padding: "20px",
+          borderRadius: "22px",
           background:
             "linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(15, 23, 42, 0.55))",
           border: "1px solid rgba(96, 165, 250, 0.18)",
           display: "grid",
-          gap: "8px",
+          gap: "12px",
         }}
       >
         <p style={labelStyle}>Coupon Code</p>
@@ -181,7 +181,7 @@ function OrderSummary({
           style={{
             display: "grid",
             gridTemplateColumns: "minmax(0, 1fr) auto",
-            gap: "10px",
+            gap: "12px",
           }}
         >
           <input
@@ -220,9 +220,9 @@ function OrderSummary({
       <div
         style={{
           display: "grid",
-          gap: "10px",
-          padding: "16px",
-          borderRadius: "20px",
+          gap: "12px",
+          padding: "20px",
+          borderRadius: "22px",
           backgroundColor: "rgba(255, 255, 255, 0.03)",
           border: "1px solid rgba(148, 163, 184, 0.08)",
         }}
@@ -276,9 +276,9 @@ const labelStyle = {
 };
 
 const titleStyle = {
-  margin: "8px 0 0",
+  margin: "10px 0 0",
   color: "#f8fafc",
-  fontSize: "1.08rem",
+  fontSize: "1.14rem",
   fontWeight: 700,
   letterSpacing: "-0.02em",
 };
@@ -286,7 +286,7 @@ const titleStyle = {
 const rowStyle = {
   display: "flex",
   justifyContent: "space-between",
-  gap: "12px",
+  gap: "16px",
   alignItems: "center",
   color: "#cbd5e1",
   fontSize: "0.94rem",
@@ -294,19 +294,19 @@ const rowStyle = {
 
 const inputStyle = {
   width: "100%",
-  minHeight: "48px",
-  borderRadius: "14px",
+  minHeight: "52px",
+  borderRadius: "16px",
   border: "1px solid rgba(148, 163, 184, 0.18)",
   backgroundColor: "rgba(2, 6, 23, 0.45)",
   color: "#f8fafc",
-  padding: "0 14px",
+  padding: "0 16px",
   outline: "none",
 };
 
 const couponButtonStyle = {
-  minWidth: "88px",
+  minWidth: "96px",
   border: "1px solid rgba(255, 255, 255, 0.08)",
-  borderRadius: "14px",
+  borderRadius: "16px",
   padding: "0 16px",
   background: "linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%)",
   color: "#020617",
@@ -317,7 +317,7 @@ const couponButtonStyle = {
 const couponTagStyle = {
   display: "inline-flex",
   alignItems: "center",
-  padding: "8px 10px",
+  padding: "9px 12px",
   borderRadius: "999px",
   backgroundColor: "rgba(255, 255, 255, 0.05)",
   border: "1px solid rgba(148, 163, 184, 0.12)",
