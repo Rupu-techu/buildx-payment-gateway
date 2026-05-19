@@ -1,264 +1,256 @@
-import { useState } from "react";
-
-import Loader from "../components/Loader.jsx";
 import PaymentButton from "../components/PaymentButton.jsx";
-import PaymentStatus from "../components/PaymentStatus.jsx";
-import ToastMessage from "../components/ToastMessage.jsx";
-import {
-  createOrder,
-  fetchPaymentStatus,
-  verifyPayment,
-} from "../services/paymentService.js";
 
-const mockScenarios = [
-  { value: "SUCCESS", label: "Successful payment" },
-  { value: "FAILED", label: "Failed payment" },
-  { value: "PENDING", label: "Pending payment" },
-];
-
-const resultContentMap = {
-  SUCCESS: {
-    variant: "success",
-    title: "Mock payment completed",
-    message: "The transaction was marked successful and saved in mock history.",
+const checkoutStyles = {
+  page: {
+    minHeight: "100vh",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "32px 16px",
+    background:
+      "linear-gradient(180deg, #f4f7fb 0%, #e8eef7 52%, #f8fafc 100%)",
   },
-  FAILED: {
-    variant: "error",
-    title: "Mock payment failed",
-    message: "The transaction was marked failed and can be retried safely.",
+  layout: {
+    width: "100%",
+    maxWidth: "1040px",
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+    gap: "24px",
+    alignItems: "stretch",
   },
-  PENDING: {
-    variant: "pending",
-    title: "Mock payment is still pending",
-    message:
-      "The transaction is still waiting for a final status. You can retry the flow any time.",
+  introCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: "24px",
+    padding: "32px",
+    border: "1px solid #dbe4f0",
+    boxShadow: "0 20px 45px rgba(15, 23, 42, 0.08)",
+  },
+  checkoutCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: "24px",
+    padding: "32px",
+    border: "1px solid #dbe4f0",
+    boxShadow: "0 24px 50px rgba(15, 23, 42, 0.1)",
+  },
+  badge: {
+    display: "inline-flex",
+    alignItems: "center",
+    padding: "8px 14px",
+    borderRadius: "999px",
+    backgroundColor: "#e8f0ff",
+    color: "#1d4ed8",
+    fontSize: "0.85rem",
+    fontWeight: 600,
+    letterSpacing: "0.02em",
+  },
+  title: {
+    margin: "18px 0 12px",
+    fontSize: "clamp(2rem, 4vw, 2.9rem)",
+    lineHeight: 1.1,
+    color: "#0f172a",
+  },
+  lead: {
+    margin: 0,
+    color: "#475569",
+    lineHeight: 1.7,
+    fontSize: "1rem",
+  },
+  featureList: {
+    display: "grid",
+    gap: "14px",
+    marginTop: "28px",
+  },
+  featureItem: {
+    padding: "14px 16px",
+    borderRadius: "16px",
+    backgroundColor: "#f8fafc",
+    border: "1px solid #e2e8f0",
+    color: "#334155",
+    lineHeight: 1.5,
+  },
+  cardHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "24px",
+  },
+  cardLabel: {
+    margin: 0,
+    color: "#64748b",
+    fontSize: "0.92rem",
+    fontWeight: 600,
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
+  },
+  statusPill: {
+    padding: "8px 12px",
+    borderRadius: "999px",
+    backgroundColor: "#ecfdf3",
+    color: "#166534",
+    fontSize: "0.82rem",
+    fontWeight: 700,
+  },
+  productCard: {
+    padding: "20px",
+    borderRadius: "20px",
+    background:
+      "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)",
+    color: "#ffffff",
+  },
+  productMeta: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "16px",
+    marginBottom: "28px",
+  },
+  productName: {
+    margin: "0 0 10px",
+    fontSize: "1.3rem",
+  },
+  productDescription: {
+    margin: 0,
+    color: "#cbd5e1",
+    lineHeight: 1.6,
+  },
+  productTag: {
+    alignSelf: "flex-start",
+    padding: "8px 12px",
+    borderRadius: "999px",
+    backgroundColor: "rgba(255, 255, 255, 0.14)",
+    color: "#f8fafc",
+    fontSize: "0.82rem",
+    fontWeight: 600,
+    whiteSpace: "nowrap",
+  },
+  cardFooter: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "12px",
+    color: "#cbd5e1",
+    fontSize: "0.92rem",
+  },
+  amountWrap: {
+    marginTop: "24px",
+    padding: "20px",
+    borderRadius: "18px",
+    backgroundColor: "#f8fafc",
+    border: "1px solid #e2e8f0",
+  },
+  amountLabel: {
+    margin: 0,
+    color: "#64748b",
+    fontSize: "0.95rem",
+  },
+  amountValue: {
+    margin: "10px 0 6px",
+    fontSize: "2.2rem",
+    fontWeight: 700,
+    color: "#0f172a",
+  },
+  amountNote: {
+    margin: 0,
+    color: "#475569",
+    lineHeight: 1.6,
+  },
+  buttonWrap: {
+    marginTop: "24px",
+  },
+  helperText: {
+    margin: "14px 0 0",
+    color: "#64748b",
+    fontSize: "0.92rem",
+    lineHeight: 1.6,
   },
 };
 
-function Checkout({ onPaymentComplete }) {
-  const [selectedScenario, setSelectedScenario] = useState("SUCCESS");
-  const [isLoading, setIsLoading] = useState(false);
-  const [statusVariant, setStatusVariant] = useState("idle");
-  const [statusMessage, setStatusMessage] = useState(
-    "Choose a mock payment result and click Pay Now to test the flow."
-  );
-  const [paymentDetails, setPaymentDetails] = useState(null);
-  const [mockAmount, setMockAmount] = useState("499.99");
-  const [toastMessage, setToastMessage] = useState("");
-  const [toastVariant, setToastVariant] = useState("info");
+function Checkout() {
+  const paymentSummary = {
+    title: "BuildX Starter Plan",
+    description:
+      "A sample order screen for the Payment Gateway module. This keeps the first UI simple while we prepare the real payment flow.",
+    amount: "$499.00",
+  };
 
-  async function handlePayment() {
-    setIsLoading(true);
-    setStatusVariant("loading");
-    setStatusMessage("Creating mock order and starting payment request...");
-    setPaymentDetails(null);
-    setToastVariant("info");
-    setToastMessage("Starting a new mock payment attempt...");
-
-    try {
-      const orderResponse = await createOrder();
-      const createdOrder = orderResponse.data;
-
-      setMockAmount(Number(createdOrder.amount).toFixed(2));
-      setStatusMessage("Order created. Verifying mock payment result...");
-      setToastMessage(orderResponse.message);
-
-      // The frontend sends the chosen scenario to the mock backend so we can
-      // test different business outcomes without integrating a real gateway yet.
-      let verificationResponse = await verifyPayment({
-        paymentId: createdOrder.payment_id,
-        status: selectedScenario,
-      });
-      let verificationDetails = {
-        ...createdOrder,
-        ...verificationResponse.data,
-      };
-
-      setPaymentDetails(verificationDetails);
-
-      if (verificationDetails.status === "PENDING") {
-        setStatusVariant("pending");
-        setStatusMessage(
-          "Payment is pending. We will check the latest status shortly."
-        );
-        setToastVariant("warning");
-        setToastMessage("The payment is pending. Checking one more time...");
-
-        // A pending payment usually needs one more backend lookup before the
-        // final transaction result is presented to the user.
-        await new Promise((resolve) => window.setTimeout(resolve, 1800));
-
-        const statusResponse = await fetchPaymentStatus(verificationDetails.payment_id);
-        verificationDetails = {
-          ...verificationDetails,
-          ...statusResponse.data,
-        };
-
-        verificationResponse = statusResponse;
-        setPaymentDetails(verificationDetails);
-      }
-
-      const resultContent =
-        resultContentMap[verificationDetails.status] || resultContentMap.PENDING;
-
-      setStatusVariant(resultContent.variant);
-      setStatusMessage(resultContent.message);
-      setToastVariant(
-        resultContent.variant === "pending"
-          ? "warning"
-          : resultContent.variant === "error"
-            ? "error"
-            : "success"
-      );
-      setToastMessage(verificationResponse.message);
-
-      onPaymentComplete({
-        ...resultContent,
-        apiMessage: verificationResponse.message,
-        paymentDetails: verificationDetails,
-      });
-    } catch (error) {
-      setToastVariant("error");
-      setToastMessage(error.message || "Something went wrong during payment.");
-      setStatusVariant("error");
-      setStatusMessage(
-        error.message || "Something went wrong while processing payment."
-      );
-      setPaymentDetails(null);
-    } finally {
-      setIsLoading(false);
-    }
+  function handleMockPayment() {
+    // This placeholder keeps the button wired for future API integration
+    // without introducing real payment logic in the first UI milestone.
+    window.alert("Payment API integration will be added in the next step.");
   }
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "2rem 1rem",
-        background:
-          "linear-gradient(180deg, #f8fafc 0%, #e2e8f0 50%, #f8fafc 100%)",
-        fontFamily:
-          "Segoe UI, -apple-system, BlinkMacSystemFont, sans-serif",
-      }}
-    >
-      <section
-        style={{
-          width: "100%",
-          maxWidth: "460px",
-          backgroundColor: "#ffffff",
-          borderRadius: "1.2rem",
-          padding: "1.5rem",
-          boxShadow: "0 20px 45px rgba(15, 23, 42, 0.12)",
-        }}
-      >
-        <p
-          style={{
-            margin: 0,
-            fontSize: "0.85rem",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            color: "#64748b",
-          }}
-        >
-          Mock Checkout
-        </p>
-        <h1 style={{ margin: "0.4rem 0 0.75rem", color: "#0f172a" }}>
-          Test the payment flow
-        </h1>
-        <p style={{ margin: "0 0 1.5rem", color: "#475569", lineHeight: 1.6 }}>
-          This screen uses the mock backend only. It is safe for frontend testing
-          and future Razorpay integration work.
-        </p>
+    <main style={checkoutStyles.page}>
+      <section style={checkoutStyles.layout}>
+        <article style={checkoutStyles.introCard}>
+          <span style={checkoutStyles.badge}>Payment Gateway Module</span>
+          <h1 style={checkoutStyles.title}>Build a clean checkout experience.</h1>
+          <p style={checkoutStyles.lead}>
+            This starter screen gives the frontend a professional payment layout
+            with a mock product card, clear amount display, and a reusable
+            button component for upcoming backend integration.
+          </p>
 
-        <div style={{ marginBottom: "1rem" }}>
-          <ToastMessage message={toastMessage} variant={toastVariant} />
-        </div>
-
-        <div
-          style={{
-            padding: "1rem",
-            borderRadius: "0.9rem",
-            backgroundColor: "#f8fafc",
-            border: "1px solid #e2e8f0",
-            marginBottom: "1rem",
-          }}
-        >
-          <div style={{ color: "#64748b", fontSize: "0.95rem" }}>
-            Amount to pay
+          <div style={checkoutStyles.featureList}>
+            <div style={checkoutStyles.featureItem}>
+              Project title and checkout summary are visible at first glance.
+            </div>
+            <div style={checkoutStyles.featureItem}>
+              The payment button is reusable and ready to receive API-related
+              props later.
+            </div>
+            <div style={checkoutStyles.featureItem}>
+              The layout stays readable on desktop and mobile with a responsive
+              two-column grid.
+            </div>
           </div>
-          <div
-            style={{
-              marginTop: "0.35rem",
-              fontSize: "2rem",
-              fontWeight: 700,
-              color: "#0f172a",
-            }}
-          >
-            ${mockAmount}
+        </article>
+
+        <article style={checkoutStyles.checkoutCard}>
+          <div style={checkoutStyles.cardHeader}>
+            <p style={checkoutStyles.cardLabel}>Checkout</p>
+            <span style={checkoutStyles.statusPill}>Secure Demo</span>
           </div>
-        </div>
 
-        <label
-          htmlFor="payment-scenario"
-          style={{
-            display: "block",
-            marginBottom: "0.45rem",
-            color: "#334155",
-            fontWeight: 600,
-          }}
-        >
-          Mock payment scenario
-        </label>
-        <select
-          id="payment-scenario"
-          value={selectedScenario}
-          onChange={(event) => setSelectedScenario(event.target.value)}
-          disabled={isLoading}
-          style={{
-            width: "100%",
-            padding: "0.85rem 1rem",
-            borderRadius: "0.75rem",
-            border: "1px solid #cbd5e1",
-            backgroundColor: "#ffffff",
-            color: "#0f172a",
-            marginBottom: "1rem",
-          }}
-        >
-          {mockScenarios.map((scenario) => (
-            <option key={scenario.value} value={scenario.value}>
-              {scenario.label}
-            </option>
-          ))}
-        </select>
+          <div style={checkoutStyles.productCard}>
+            <div style={checkoutStyles.productMeta}>
+              <div>
+                <h2 style={checkoutStyles.productName}>{paymentSummary.title}</h2>
+                <p style={checkoutStyles.productDescription}>
+                  {paymentSummary.description}
+                </p>
+              </div>
+              <span style={checkoutStyles.productTag}>Mock Product</span>
+            </div>
 
-        <PaymentButton isLoading={isLoading} onClick={handlePayment}>
-          {isLoading ? <Loader label="Processing payment..." size="small" /> : "Pay Now"}
-        </PaymentButton>
-
-        <div style={{ marginTop: "1rem" }}>
-          <PaymentStatus
-            variant={statusVariant}
-            message={statusMessage}
-            paymentDetails={paymentDetails}
-          />
-        </div>
-
-        {statusVariant === "loading" ? (
-          <div
-            style={{
-              marginTop: "1rem",
-              padding: "0.9rem 1rem",
-              borderRadius: "0.9rem",
-              backgroundColor: "#f8fafc",
-              border: "1px dashed #cbd5e1",
-            }}
-          >
-            <Loader label="Contacting the mock payment backend..." />
+            <div style={checkoutStyles.cardFooter}>
+              <span>Order ID: DEMO-001</span>
+              <span>Mode: Test</span>
+            </div>
           </div>
-        ) : null}
+
+          <div style={checkoutStyles.amountWrap}>
+            <p style={checkoutStyles.amountLabel}>Payment Amount</p>
+            <p style={checkoutStyles.amountValue}>{paymentSummary.amount}</p>
+            <p style={checkoutStyles.amountNote}>
+              No real charge will happen here. This button only prepares the UI
+              flow for the future payment API.
+            </p>
+          </div>
+
+          <div style={checkoutStyles.buttonWrap}>
+            <PaymentButton
+              label="Proceed to Pay"
+              onClick={handleMockPayment}
+              disabled={false}
+              loading={false}
+              futureAction="create-order"
+            />
+          </div>
+
+          <p style={checkoutStyles.helperText}>
+            Next step: connect this button to your order creation endpoint and
+            payment verification flow.
+          </p>
+        </article>
       </section>
     </main>
   );

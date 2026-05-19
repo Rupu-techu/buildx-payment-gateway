@@ -1,23 +1,41 @@
-function PaymentButton({ isLoading, onClick, children = "Pay Now" }) {
+function PaymentButton({
+  label,
+  onClick,
+  disabled = false,
+  loading = false,
+  type = "button",
+  futureAction = "payment-request",
+}) {
+  const isDisabled = disabled || loading;
+
   return (
     <button
-      type="button"
+      type={type}
       onClick={onClick}
-      disabled={isLoading}
+      disabled={isDisabled}
+      data-future-action={futureAction}
+      aria-busy={loading}
       style={{
         width: "100%",
-        padding: "0.9rem 1rem",
         border: "none",
-        borderRadius: "0.75rem",
-        backgroundColor: isLoading ? "#94a3b8" : "#0f172a",
+        borderRadius: "16px",
+        padding: "16px 20px",
+        background: isDisabled
+          ? "#94a3b8"
+          : "linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%)",
         color: "#ffffff",
         fontSize: "1rem",
-        fontWeight: 600,
-        cursor: isLoading ? "not-allowed" : "pointer",
-        transition: "background-color 0.2s ease",
+        fontWeight: 700,
+        letterSpacing: "0.01em",
+        cursor: isDisabled ? "not-allowed" : "pointer",
+        boxShadow: isDisabled
+          ? "none"
+          : "0 18px 32px rgba(29, 78, 216, 0.24)",
+        transition: "transform 0.2s ease, box-shadow 0.2s ease",
       }}
     >
-      {children}
+      {/* This label can later switch to API states like "Creating order..." */}
+      {loading ? "Preparing payment..." : label}
     </button>
   );
 }
