@@ -3,6 +3,7 @@ import CartItem from "./CartItem.jsx";
 function Cart({
   items,
   subtotal,
+  pricing,
   onIncrease,
   onDecrease,
   onRemove,
@@ -121,6 +122,7 @@ function Cart({
             justifyContent: "space-between",
             alignItems: "flex-end",
             gap: "16px",
+            flexWrap: "wrap",
           }}
         >
           <div>
@@ -159,9 +161,41 @@ function Cart({
               fontSize: "0.9rem",
             }}
           >
-            Demo total
+            {pricing.deliveryFee === 0 && subtotal > 0
+              ? "Free delivery unlocked"
+              : "Taxes calculated at checkout"}
           </p>
         </div>
+
+        {items.length > 0 ? (
+          <div
+            style={{
+              display: "grid",
+              gap: "10px",
+              padding: "14px 16px",
+              borderRadius: "18px",
+              backgroundColor: "rgba(255, 255, 255, 0.03)",
+              border: "1px solid rgba(148, 163, 184, 0.08)",
+            }}
+          >
+            <div style={priceHintRowStyle}>
+              <span>Platform fee</span>
+              <strong>{formatCurrency(pricing.platformFee)}</strong>
+            </div>
+            <div style={priceHintRowStyle}>
+              <span>Delivery</span>
+              <strong>
+                {pricing.deliveryFee === 0
+                  ? "FREE"
+                  : formatCurrency(pricing.deliveryFee)}
+              </strong>
+            </div>
+            <div style={priceHintRowStyle}>
+              <span>Estimated payable</span>
+              <strong>{formatCurrency(pricing.total)}</strong>
+            </div>
+          </div>
+        ) : null}
 
         <button
           type="button"
@@ -194,5 +228,22 @@ function Cart({
     </aside>
   );
 }
+
+function formatCurrency(amount) {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+const priceHintRowStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: "12px",
+  alignItems: "center",
+  color: "#cbd5e1",
+  fontSize: "0.88rem",
+};
 
 export default Cart;

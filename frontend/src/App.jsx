@@ -5,6 +5,7 @@ import CheckoutStepper from "../components/CheckoutStepper.jsx";
 import ProductCard from "../components/ProductCard.jsx";
 import Checkout from "../pages/Checkout.jsx";
 import Payment from "../pages/Payment.jsx";
+import { calculatePricing, normalizeCouponCode } from "../utils/pricing.js";
 
 const appStyles = {
   page: {
@@ -162,26 +163,11 @@ function App() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const subtotal = cartItems.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  );
-  const platformFee = subtotal > 0 ? 29 : 0;
-  const deliveryFee = subtotal >= 500 ? 0 : subtotal > 0 ? 49 : 0;
-  const gst = Math.round((subtotal + platformFee) * 0.18);
-  const discount =
-    appliedCoupon === "SAVE10" ? Math.min(Math.round(subtotal * 0.1), 120) : 0;
-  const total = subtotal + platformFee + deliveryFee + gst - discount;
-  const totalSaved = discount + (deliveryFee === 0 && subtotal > 0 ? 49 : 0);
-
-  const pricing = {
-    platformFee,
-    deliveryFee,
-    gst,
-    discount,
-    total,
-    totalSaved,
-  };
+  const pricing = calculatePricing({
+    cartItems,
+    couponCode: appliedCoupon,
+  });
+  const subtotal = pricing.subtotal;
 
   function addToCart(product) {
     setCartItems((currentItems) => {
@@ -243,14 +229,7 @@ function App() {
   }
 
   function handleApplyCoupon() {
-    const normalizedCode = couponCode.trim().toUpperCase();
-
-    if (normalizedCode === "SAVE10") {
-      setAppliedCoupon(normalizedCode);
-      return;
-    }
-
-    setAppliedCoupon("");
+    setAppliedCoupon(normalizeCouponCode(couponCode));
   }
 
   function handleCardChange(field, value) {
@@ -337,6 +316,7 @@ function App() {
           <Cart
             items={cartItems}
             subtotal={subtotal}
+            pricing={pricing}
             onIncrease={increaseQuantity}
             onDecrease={decreaseQuantity}
             onRemove={removeFromCart}

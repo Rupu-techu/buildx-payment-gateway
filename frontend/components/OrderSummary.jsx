@@ -1,3 +1,5 @@
+import { couponCatalog, formatCurrency } from "../utils/pricing.js";
+
 function OrderSummary({
   cartItems,
   subtotal,
@@ -131,7 +133,7 @@ function OrderSummary({
           </strong>
         </div>
         <div style={rowStyle}>
-          <span>GST / Tax</span>
+          <span>GST ({Math.round(pricing.rules.gstRate * 100)}%)</span>
           <strong>{formatCurrency(pricing.gst)}</strong>
         </div>
         <div style={{ ...rowStyle, color: "#6ee7b7" }}>
@@ -154,6 +156,31 @@ function OrderSummary({
         <p style={labelStyle}>Coupon Code</p>
         <div
           style={{
+            display: "flex",
+            gap: "8px",
+            flexWrap: "wrap",
+          }}
+        >
+          {Object.values(couponCatalog).map((coupon) => (
+            <span key={coupon.code} style={couponTagStyle}>
+              {coupon.code}: {coupon.label}
+            </span>
+          ))}
+          {appliedCoupon ? (
+            <span
+              style={{
+                ...couponTagStyle,
+                color: "#6ee7b7",
+                border: "1px solid rgba(52, 211, 153, 0.24)",
+                backgroundColor: "rgba(16, 185, 129, 0.12)",
+              }}
+            >
+              Active: {appliedCoupon}
+            </span>
+          ) : null}
+        </div>
+        <div
+          style={{
             display: "grid",
             gridTemplateColumns: "minmax(0, 1fr) auto",
             gap: "10px",
@@ -163,7 +190,7 @@ function OrderSummary({
             type="text"
             value={couponCode}
             onChange={(event) => onCouponChange(event.target.value)}
-            placeholder="Use SAVE10"
+            placeholder="Use SAVE10 or FIRST50"
             style={inputStyle}
           />
           <button
@@ -178,14 +205,17 @@ function OrderSummary({
         <p
           style={{
             margin: 0,
-            color: appliedCoupon ? "#6ee7b7" : "#94a3b8",
+            color:
+              pricing.couponStatus === "applied"
+                ? "#6ee7b7"
+                : pricing.couponStatus === "invalid"
+                  ? "#fca5a5"
+                  : "#94a3b8",
             fontSize: "0.84rem",
             lineHeight: 1.5,
           }}
         >
-          {appliedCoupon
-            ? `Coupon ${appliedCoupon} applied successfully.`
-            : "Try the mock code SAVE10 for a demo discount."}
+          {pricing.couponMessage}
         </p>
       </div>
 
@@ -230,20 +260,16 @@ function OrderSummary({
               fontSize: "0.84rem",
             }}
           >
-            Estimated delivery by Tomorrow, 8 PM
+            {pricing.deliveryFee === 0
+              ? `Free delivery above ${formatCurrency(pricing.rules.freeDeliveryThreshold)} unlocked`
+              : `Add more items for free delivery above ${formatCurrency(
+                  pricing.rules.freeDeliveryThreshold
+                )}`}
           </p>
         </div>
       </div>
     </section>
   );
-}
-
-function formatCurrency(amount) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(amount);
 }
 
 const labelStyle = {
@@ -292,6 +318,18 @@ const couponButtonStyle = {
   color: "#020617",
   fontWeight: 700,
   cursor: "pointer",
+};
+
+const couponTagStyle = {
+  display: "inline-flex",
+  alignItems: "center",
+  padding: "8px 10px",
+  borderRadius: "999px",
+  backgroundColor: "rgba(255, 255, 255, 0.05)",
+  border: "1px solid rgba(148, 163, 184, 0.12)",
+  color: "#cbd5e1",
+  fontSize: "0.76rem",
+  fontWeight: 600,
 };
 
 export default OrderSummary;
