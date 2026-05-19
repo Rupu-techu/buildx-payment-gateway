@@ -11,198 +11,211 @@ const checkoutStyles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "32px 16px",
+    padding: "24px",
     background:
-      "linear-gradient(180deg, #f4f7fb 0%, #e8eef7 52%, #f8fafc 100%)",
+      "radial-gradient(circle at top, rgba(59, 130, 246, 0.16), transparent 30%), linear-gradient(180deg, #06121f 0%, #0b1728 48%, #08111d 100%)",
   },
-  layout: {
+  shell: {
+    position: "relative",
     width: "100%",
-    maxWidth: "1040px",
+    maxWidth: "520px",
+  },
+  glow: {
+    position: "absolute",
+    inset: "-18px",
+    borderRadius: "36px",
+    background:
+      "linear-gradient(135deg, rgba(96, 165, 250, 0.24), rgba(129, 140, 248, 0.1), rgba(16, 185, 129, 0.16))",
+    filter: "blur(22px)",
+    opacity: 0.9,
+    pointerEvents: "none",
+  },
+  card: {
+    position: "relative",
+    overflow: "hidden",
+    borderRadius: "32px",
+    padding: "28px",
+    background: "rgba(8, 15, 27, 0.78)",
+    border: "1px solid rgba(148, 163, 184, 0.16)",
+    boxShadow: "0 28px 80px rgba(2, 6, 23, 0.55)",
+    backdropFilter: "blur(18px)",
+    color: "#f8fafc",
+  },
+  topRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: "16px",
+    marginBottom: "28px",
+  },
+  brandWrap: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-    gap: "24px",
-    alignItems: "stretch",
-  },
-  introCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: "24px",
-    padding: "32px",
-    border: "1px solid #dbe4f0",
-    boxShadow: "0 20px 45px rgba(15, 23, 42, 0.08)",
-  },
-  checkoutCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: "24px",
-    padding: "32px",
-    border: "1px solid #dbe4f0",
-    boxShadow: "0 24px 50px rgba(15, 23, 42, 0.1)",
+    gap: "8px",
   },
   badge: {
     display: "inline-flex",
     alignItems: "center",
-    padding: "8px 14px",
+    width: "fit-content",
+    padding: "7px 12px",
     borderRadius: "999px",
-    backgroundColor: "#e8f0ff",
-    color: "#1d4ed8",
-    fontSize: "0.85rem",
-    fontWeight: 600,
-    letterSpacing: "0.02em",
-  },
-  title: {
-    margin: "18px 0 12px",
-    fontSize: "clamp(2rem, 4vw, 2.9rem)",
-    lineHeight: 1.1,
-    color: "#0f172a",
-  },
-  lead: {
-    margin: 0,
-    color: "#475569",
-    lineHeight: 1.7,
-    fontSize: "1rem",
-  },
-  featureList: {
-    display: "grid",
-    gap: "14px",
-    marginTop: "28px",
-  },
-  featureItem: {
-    padding: "14px 16px",
-    borderRadius: "16px",
-    backgroundColor: "#f8fafc",
-    border: "1px solid #e2e8f0",
-    color: "#334155",
-    lineHeight: 1.5,
-  },
-  cardHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "24px",
-  },
-  cardLabel: {
-    margin: 0,
-    color: "#64748b",
-    fontSize: "0.92rem",
-    fontWeight: 600,
-    letterSpacing: "0.04em",
+    border: "1px solid rgba(125, 211, 252, 0.18)",
+    backgroundColor: "rgba(15, 23, 42, 0.42)",
+    color: "#93c5fd",
+    fontSize: "0.74rem",
+    fontWeight: 700,
+    letterSpacing: "0.08em",
     textTransform: "uppercase",
   },
-  statusPill: {
-    padding: "8px 12px",
-    borderRadius: "999px",
-    backgroundColor: "#ecfdf3",
-    color: "#166534",
-    fontSize: "0.82rem",
-    fontWeight: 700,
-  },
-  productCard: {
-    padding: "20px",
-    borderRadius: "20px",
-    background:
-      "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)",
-    color: "#ffffff",
-  },
-  productMeta: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: "16px",
-    marginBottom: "28px",
-  },
-  productName: {
-    margin: "0 0 10px",
-    fontSize: "1.3rem",
-  },
-  productDescription: {
+  heading: {
     margin: 0,
-    color: "#cbd5e1",
-    lineHeight: 1.6,
+    fontSize: "clamp(2rem, 6vw, 2.8rem)",
+    lineHeight: 1,
+    letterSpacing: "-0.04em",
+    fontWeight: 800,
   },
-  productTag: {
-    alignSelf: "flex-start",
-    padding: "8px 12px",
+  subtext: {
+    margin: 0,
+    color: "#94a3b8",
+    fontSize: "0.95rem",
+    lineHeight: 1.5,
+  },
+  securePill: {
+    padding: "10px 14px",
     borderRadius: "999px",
-    backgroundColor: "rgba(255, 255, 255, 0.14)",
-    color: "#f8fafc",
-    fontSize: "0.82rem",
-    fontWeight: 600,
+    background: "rgba(16, 185, 129, 0.14)",
+    border: "1px solid rgba(52, 211, 153, 0.26)",
+    color: "#6ee7b7",
+    fontSize: "0.78rem",
+    fontWeight: 700,
     whiteSpace: "nowrap",
   },
-  cardFooter: {
+  productCard: {
+    padding: "24px",
+    borderRadius: "26px",
+    background:
+      "linear-gradient(145deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.92) 60%, rgba(51, 65, 85, 0.9) 100%)",
+    border: "1px solid rgba(148, 163, 184, 0.14)",
+    boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.06)",
+  },
+  productTop: {
     display: "flex",
     justifyContent: "space-between",
-    gap: "12px",
+    alignItems: "flex-start",
+    gap: "16px",
+  },
+  productLabel: {
+    margin: 0,
+    color: "#64748b",
+    fontSize: "0.75rem",
+    fontWeight: 700,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+  },
+  productTitle: {
+    margin: "12px 0 6px",
+    fontSize: "1.4rem",
+    fontWeight: 700,
+    letterSpacing: "-0.03em",
+  },
+  productMeta: {
+    margin: 0,
     color: "#cbd5e1",
     fontSize: "0.92rem",
   },
-  amountWrap: {
-    marginTop: "24px",
-    padding: "20px",
-    borderRadius: "18px",
-    backgroundColor: "#f8fafc",
-    border: "1px solid #e2e8f0",
+  chip: {
+    padding: "10px 12px",
+    borderRadius: "16px",
+    backgroundColor: "rgba(148, 163, 184, 0.12)",
+    color: "#e2e8f0",
+    fontSize: "0.8rem",
+    fontWeight: 600,
+  },
+  divider: {
+    height: "1px",
+    margin: "22px 0",
+    background:
+      "linear-gradient(90deg, rgba(148, 163, 184, 0), rgba(148, 163, 184, 0.3), rgba(148, 163, 184, 0))",
+  },
+  amountRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    gap: "16px",
   },
   amountLabel: {
     margin: 0,
-    color: "#64748b",
-    fontSize: "0.95rem",
+    color: "#94a3b8",
+    fontSize: "0.88rem",
   },
   amountValue: {
-    margin: "10px 0 6px",
-    fontSize: "2.2rem",
-    fontWeight: 700,
-    color: "#0f172a",
+    margin: "8px 0 0",
+    fontSize: "2.8rem",
+    lineHeight: 0.95,
+    letterSpacing: "-0.06em",
+    fontWeight: 800,
   },
-  amountNote: {
+  orderWrap: {
+    display: "grid",
+    gap: "6px",
+    justifyItems: "end",
+    textAlign: "right",
+  },
+  orderLabel: {
     margin: 0,
-    color: "#475569",
-    lineHeight: 1.6,
+    color: "#64748b",
+    fontSize: "0.75rem",
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
+  },
+  orderValue: {
+    margin: 0,
+    color: "#f8fafc",
+    fontSize: "0.92rem",
+    fontWeight: 600,
+  },
+  contentStack: {
+    display: "grid",
+    gap: "18px",
+    marginTop: "22px",
   },
   buttonWrap: {
-    marginTop: "24px",
-  },
-  helperText: {
-    margin: "14px 0 0",
-    color: "#64748b",
-    fontSize: "0.92rem",
-    lineHeight: 1.6,
+    display: "grid",
+    gap: "14px",
   },
   loaderWrap: {
-    marginTop: "18px",
-    padding: "14px 16px",
-    borderRadius: "16px",
-    backgroundColor: "#eff6ff",
-    border: "1px solid #bfdbfe",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: "48px",
   },
 };
 
 const initialStatus = {
   variant: "idle",
-  message: "Click Pay Now to simulate a frontend payment response.",
+  message: "Ready to process payment",
   payment: null,
 };
 
 const statusContent = {
   SUCCESS: {
     variant: "success",
-    message: "Payment completed successfully. The mock transaction was approved.",
+    message: "Payment received",
   },
   FAILED: {
     variant: "error",
-    message: "Payment failed in the demo flow. You can retry the payment safely.",
+    message: "Payment could not be completed",
   },
   PENDING: {
     variant: "pending",
-    message:
-      "Payment is pending. The request was created, but final confirmation has not arrived yet.",
+    message: "Payment is awaiting confirmation",
   },
 };
 
 function Checkout() {
   const paymentSummary = {
     title: "BuildX Starter Plan",
-    description:
-      "A sample order screen for the Payment Gateway module. This keeps the first UI simple while we prepare the real payment flow.",
     amount: "$499.00",
+    orderId: "DEMO-001",
   };
   const [isLoading, setIsLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(initialStatus);
@@ -211,13 +224,13 @@ function Checkout() {
     setIsLoading(true);
     setPaymentStatus({
       variant: "loading",
-      message: "Sending mock payment request and waiting for a sample response...",
+      message: "Authorizing secure transaction",
       payment: null,
     });
 
     try {
-      // The service returns a fake response after a short delay so the UI
-      // behaves like a real API-driven checkout flow.
+      // This keeps the polished UI connected to a fake service now,
+      // so swapping in a real API later stays straightforward.
       const response = await simulatePayment();
       const nextStatus = statusContent[response.status] || statusContent.PENDING;
 
@@ -229,8 +242,7 @@ function Checkout() {
     } catch (error) {
       setPaymentStatus({
         variant: "error",
-        message:
-          error.message || "The mock payment request could not be completed.",
+        message: error.message || "Payment request failed",
         payment: null,
       });
     } finally {
@@ -244,93 +256,70 @@ function Checkout() {
 
   return (
     <main style={checkoutStyles.page}>
-      <section style={checkoutStyles.layout}>
-        <article style={checkoutStyles.introCard}>
-          <span style={checkoutStyles.badge}>Payment Gateway Module</span>
-          <h1 style={checkoutStyles.title}>Build a clean checkout experience.</h1>
-          <p style={checkoutStyles.lead}>
-            This screen now includes a mock payment interaction flow with
-            loading, sample API-style responses, and reusable status handling
-            components for beginner-friendly development.
-          </p>
+      <section style={checkoutStyles.shell}>
+        <div style={checkoutStyles.glow} aria-hidden="true" />
 
-          <div style={checkoutStyles.featureList}>
-            <div style={checkoutStyles.featureItem}>
-              Clicking the payment button simulates a real request/response
-              cycle.
+        <article style={checkoutStyles.card}>
+          <div style={checkoutStyles.topRow}>
+            <div style={checkoutStyles.brandWrap}>
+              <span style={checkoutStyles.badge}>BuildX Payments</span>
+              <h1 style={checkoutStyles.heading}>Checkout</h1>
+              <p style={checkoutStyles.subtext}>Premium demo payment flow</p>
             </div>
-            <div style={checkoutStyles.featureItem}>
-              Success, failed, and pending states each render different user
-              feedback.
-            </div>
-            <div style={checkoutStyles.featureItem}>
-              The retry action appears only when the payment fails, keeping the
-              flow simple and focused.
-            </div>
-          </div>
-        </article>
 
-        <article style={checkoutStyles.checkoutCard}>
-          <div style={checkoutStyles.cardHeader}>
-            <p style={checkoutStyles.cardLabel}>Checkout</p>
-            <span style={checkoutStyles.statusPill}>Secure Demo</span>
+            <span style={checkoutStyles.securePill}>Secure Demo</span>
           </div>
 
-          <div style={checkoutStyles.productCard}>
-            <div style={checkoutStyles.productMeta}>
+          <section style={checkoutStyles.productCard}>
+            <div style={checkoutStyles.productTop}>
               <div>
-                <h2 style={checkoutStyles.productName}>{paymentSummary.title}</h2>
-                <p style={checkoutStyles.productDescription}>
-                  {paymentSummary.description}
-                </p>
+                <p style={checkoutStyles.productLabel}>Product</p>
+                <h2 style={checkoutStyles.productTitle}>{paymentSummary.title}</h2>
+                <p style={checkoutStyles.productMeta}>Subscription access</p>
               </div>
-              <span style={checkoutStyles.productTag}>Mock Product</span>
+
+              <span style={checkoutStyles.chip}>Test Mode</span>
             </div>
 
-            <div style={checkoutStyles.cardFooter}>
-              <span>Order ID: DEMO-001</span>
-              <span>Mode: Test</span>
+            <div style={checkoutStyles.divider} />
+
+            <div style={checkoutStyles.amountRow}>
+              <div>
+                <p style={checkoutStyles.amountLabel}>Amount</p>
+                <p style={checkoutStyles.amountValue}>{paymentSummary.amount}</p>
+              </div>
+
+              <div style={checkoutStyles.orderWrap}>
+                <p style={checkoutStyles.orderLabel}>Order ID</p>
+                <p style={checkoutStyles.orderValue}>{paymentSummary.orderId}</p>
+              </div>
             </div>
-          </div>
+          </section>
 
-          <div style={checkoutStyles.amountWrap}>
-            <p style={checkoutStyles.amountLabel}>Payment Amount</p>
-            <p style={checkoutStyles.amountValue}>{paymentSummary.amount}</p>
-            <p style={checkoutStyles.amountNote}>
-              No real charge will happen here. This button only simulates a
-              payment response for frontend testing.
-            </p>
-          </div>
-
-          <div style={checkoutStyles.buttonWrap}>
-            <PaymentButton
-              label="Pay Now"
-              onClick={handleMockPayment}
-              disabled={false}
-              loading={isLoading}
-              futureAction="mock-payment-request"
-            />
-          </div>
-
-          {isLoading ? (
-            <div style={checkoutStyles.loaderWrap}>
-              <Loader label="Processing your mock payment..." />
-            </div>
-          ) : null}
-
-          <div style={{ marginTop: "18px" }}>
+          <div style={checkoutStyles.contentStack}>
             <PaymentStatus
               variant={paymentStatus.variant}
               message={paymentStatus.message}
               payment={paymentStatus.payment}
               onRetry={paymentStatus.variant === "error" ? handleRetryPayment : null}
             />
-          </div>
 
-          <p style={checkoutStyles.helperText}>
-            Next step: replace the mock service with your real order creation
-            and payment verification API calls when the backend is ready.
-          </p>
+            <div style={checkoutStyles.buttonWrap}>
+              <PaymentButton
+                label="Pay Now"
+                onClick={handleMockPayment}
+                disabled={false}
+                loading={isLoading}
+                futureAction="mock-payment-request"
+              />
+
+              {isLoading ? (
+                <div style={checkoutStyles.loaderWrap}>
+                  <Loader label="Processing payment" size="small" />
+                </div>
+              ) : null}
+            </div>
+          </div>
         </article>
       </section>
     </main>
