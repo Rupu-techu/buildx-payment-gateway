@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import Cart from "../components/Cart.jsx";
+import CheckoutStepper from "../components/CheckoutStepper.jsx";
 import ProductCard from "../components/ProductCard.jsx";
 import Checkout from "../pages/Checkout.jsx";
+import Payment from "../pages/Payment.jsx";
 
 const appStyles = {
   page: {
@@ -64,11 +66,61 @@ const appStyles = {
   },
   layout: {
     display: "grid",
-    gridTemplateColumns: "minmax(0, 1.15fr) minmax(340px, 0.85fr)",
     gap: "24px",
     alignItems: "start",
   },
 };
+
+const paymentMethods = [
+  {
+    id: "GOOGLE_PAY",
+    label: "Google Pay",
+    icon: "G",
+    description: "One-tap checkout",
+    iconBackground: "rgba(96, 165, 250, 0.18)",
+    iconColor: "#bfdbfe",
+  },
+  {
+    id: "PHONEPE",
+    label: "PhonePe",
+    icon: "P",
+    description: "UPI app payment",
+    iconBackground: "rgba(167, 139, 250, 0.2)",
+    iconColor: "#ddd6fe",
+  },
+  {
+    id: "PAYTM",
+    label: "Paytm",
+    icon: "PT",
+    description: "Wallet or UPI",
+    iconBackground: "rgba(45, 212, 191, 0.16)",
+    iconColor: "#99f6e4",
+  },
+  {
+    id: "UPI",
+    label: "UPI",
+    icon: "U",
+    description: "Enter UPI ID",
+    iconBackground: "rgba(251, 191, 36, 0.18)",
+    iconColor: "#fde68a",
+  },
+  {
+    id: "CARD",
+    label: "Credit / Debit Card",
+    icon: "CD",
+    description: "Card number and CVV",
+    iconBackground: "rgba(248, 250, 252, 0.14)",
+    iconColor: "#e2e8f0",
+  },
+  {
+    id: "NET_BANKING",
+    label: "Net Banking",
+    icon: "NB",
+    description: "Bank transfer flow",
+    iconBackground: "rgba(74, 222, 128, 0.16)",
+    iconColor: "#bbf7d0",
+  },
+];
 
 const mockProduct = {
   id: "buildx-starter-plan",
@@ -82,11 +134,54 @@ function App() {
   const [cartItems, setCartItems] = useState([]);
   const [stage, setStage] = useState("cart");
   const [orderId, setOrderId] = useState("DEMO-001");
+  const [selectedMethod, setSelectedMethod] = useState("GOOGLE_PAY");
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState("");
+  const [upiId, setUpiId] = useState("");
+  const [cardDetails, setCardDetails] = useState({
+    number: "",
+    expiry: "",
+    cvv: "",
+  });
+  const [isCompact, setIsCompact] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+
+    return window.innerWidth < 900;
+  });
+
+  useEffect(() => {
+    function handleResize() {
+      setIsCompact(window.innerWidth < 900);
+    }
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const subtotal = cartItems.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
+  const platformFee = subtotal > 0 ? 29 : 0;
+  const deliveryFee = subtotal >= 500 ? 0 : subtotal > 0 ? 49 : 0;
+  const gst = Math.round((subtotal + platformFee) * 0.18);
+  const discount =
+    appliedCoupon === "SAVE10" ? Math.min(Math.round(subtotal * 0.1), 120) : 0;
+  const total = subtotal + platformFee + deliveryFee + gst - discount;
+  const totalSaved = discount + (deliveryFee === 0 && subtotal > 0 ? 49 : 0);
+
+  const pricing = {
+    platformFee,
+    deliveryFee,
+    gst,
+    discount,
+    total,
+    totalSaved,
+  };
 
   function addToCart(product) {
     setCartItems((currentItems) => {
@@ -139,13 +234,73 @@ function App() {
     setStage("cart");
   }
 
+  function proceedToPayment() {
+    setStage("payment");
+  }
+
+  function returnToCheckout() {
+    setStage("checkout");
+  }
+
+  function handleApplyCoupon() {
+    const normalizedCode = couponCode.trim().toUpperCase();
+
+    if (normalizedCode === "SAVE10") {
+      setAppliedCoupon(normalizedCode);
+      return;
+    }
+
+    setAppliedCoupon("");
+  }
+
+  function handleCardChange(field, value) {
+    setCardDetails((currentDetails) => ({
+      ...currentDetails,
+      [field]: value,
+    }));
+  }
+
   if (stage === "checkout") {
     return (
       <Checkout
         cartItems={cartItems}
         subtotal={subtotal}
+        pricing={pricing}
         orderId={orderId}
+        paymentMethods={paymentMethods}
+        selectedMethod={selectedMethod}
+        couponCode={couponCode}
+        appliedCoupon={appliedCoupon}
         onBack={returnToCart}
+        onContinue={proceedToPayment}
+        onMethodSelect={setSelectedMethod}
+        onCouponChange={setCouponCode}
+        onApplyCoupon={handleApplyCoupon}
+        isCompact={isCompact}
+      />
+    );
+  }
+
+  if (stage === "payment") {
+    return (
+      <Payment
+        cartItems={cartItems}
+        subtotal={subtotal}
+        pricing={pricing}
+        orderId={orderId}
+        paymentMethods={paymentMethods}
+        selectedMethod={selectedMethod}
+        couponCode={couponCode}
+        appliedCoupon={appliedCoupon}
+        upiId={upiId}
+        cardDetails={cardDetails}
+        onBackToCheckout={returnToCheckout}
+        onMethodSelect={setSelectedMethod}
+        onCouponChange={setCouponCode}
+        onApplyCoupon={handleApplyCoupon}
+        onUpiChange={setUpiId}
+        onCardChange={handleCardChange}
+        isCompact={isCompact}
       />
     );
   }
@@ -166,9 +321,18 @@ function App() {
 
             <span style={appStyles.stagePill}>Product to Payment Flow</span>
           </div>
+
+          <CheckoutStepper activeStep="cart" compact={isCompact} />
         </header>
 
-        <section style={appStyles.layout}>
+        <section
+          style={{
+            ...appStyles.layout,
+            gridTemplateColumns: isCompact
+              ? "minmax(0, 1fr)"
+              : "minmax(0, 1.15fr) minmax(340px, 0.85fr)",
+          }}
+        >
           <ProductCard product={mockProduct} onAddToCart={addToCart} />
           <Cart
             items={cartItems}

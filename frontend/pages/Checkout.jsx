@@ -1,63 +1,7 @@
-import { useState } from "react";
-
-import Loader from "../components/Loader.jsx";
+import CheckoutStepper from "../components/CheckoutStepper.jsx";
 import OrderSummary from "../components/OrderSummary.jsx";
 import PaymentButton from "../components/PaymentButton.jsx";
-import PaymentMethodFields from "../components/PaymentMethodFields.jsx";
 import PaymentMethodSelector from "../components/PaymentMethodSelector.jsx";
-import PaymentStatus from "../components/PaymentStatus.jsx";
-import { simulatePayment } from "../services/paymentService.js";
-
-const paymentMethods = [
-  {
-    id: "GOOGLE_PAY",
-    label: "Google Pay",
-    icon: "G",
-    description: "One-tap checkout",
-    iconBackground: "rgba(96, 165, 250, 0.18)",
-    iconColor: "#bfdbfe",
-  },
-  {
-    id: "PHONEPE",
-    label: "PhonePe",
-    icon: "P",
-    description: "UPI app payment",
-    iconBackground: "rgba(167, 139, 250, 0.2)",
-    iconColor: "#ddd6fe",
-  },
-  {
-    id: "PAYTM",
-    label: "Paytm",
-    icon: "PT",
-    description: "Wallet or UPI",
-    iconBackground: "rgba(45, 212, 191, 0.16)",
-    iconColor: "#99f6e4",
-  },
-  {
-    id: "UPI",
-    label: "UPI",
-    icon: "U",
-    description: "Enter UPI ID",
-    iconBackground: "rgba(251, 191, 36, 0.18)",
-    iconColor: "#fde68a",
-  },
-  {
-    id: "CARD",
-    label: "Credit / Debit Card",
-    icon: "CD",
-    description: "Card number and CVV",
-    iconBackground: "rgba(248, 250, 252, 0.14)",
-    iconColor: "#e2e8f0",
-  },
-  {
-    id: "NET_BANKING",
-    label: "Net Banking",
-    icon: "NB",
-    description: "Bank transfer flow",
-    iconBackground: "rgba(74, 222, 128, 0.16)",
-    iconColor: "#bbf7d0",
-  },
-];
 
 const checkoutStyles = {
   page: {
@@ -72,7 +16,7 @@ const checkoutStyles = {
   shell: {
     position: "relative",
     width: "100%",
-    maxWidth: "920px",
+    maxWidth: "1140px",
   },
   glow: {
     position: "absolute",
@@ -100,7 +44,6 @@ const checkoutStyles = {
     justifyContent: "space-between",
     alignItems: "flex-start",
     gap: "16px",
-    marginBottom: "24px",
     flexWrap: "wrap",
   },
   headerLeft: {
@@ -108,11 +51,12 @@ const checkoutStyles = {
     gap: "8px",
   },
   backButton: {
-    border: "none",
-    padding: "0",
-    background: "transparent",
-    color: "#93c5fd",
-    fontSize: "0.9rem",
+    border: "1px solid rgba(125, 211, 252, 0.22)",
+    padding: "10px 14px",
+    borderRadius: "999px",
+    background: "rgba(15, 23, 42, 0.36)",
+    color: "#dbeafe",
+    fontSize: "0.88rem",
     fontWeight: 600,
     cursor: "pointer",
     width: "fit-content",
@@ -156,7 +100,6 @@ const checkoutStyles = {
   },
   layout: {
     display: "grid",
-    gridTemplateColumns: "minmax(0, 1.05fr) minmax(300px, 0.95fr)",
     gap: "20px",
     alignItems: "start",
   },
@@ -182,7 +125,7 @@ const checkoutStyles = {
     alignItems: "flex-start",
     gap: "16px",
   },
-  productLabel: {
+  sectionLabel: {
     margin: 0,
     color: "#64748b",
     fontSize: "0.75rem",
@@ -190,13 +133,13 @@ const checkoutStyles = {
     letterSpacing: "0.1em",
     textTransform: "uppercase",
   },
-  productTitle: {
+  sectionTitle: {
     margin: "12px 0 6px",
     fontSize: "1.4rem",
     fontWeight: 700,
     letterSpacing: "-0.03em",
   },
-  productMeta: {
+  sectionMeta: {
     margin: 0,
     color: "#cbd5e1",
     fontSize: "0.92rem",
@@ -252,200 +195,79 @@ const checkoutStyles = {
     fontSize: "0.92rem",
     fontWeight: 600,
   },
-  summaryCard: {
+  continuationCard: {
     display: "grid",
-    gap: "12px",
-    padding: "20px",
-    borderRadius: "22px",
+    gap: "18px",
+    padding: "22px",
+    borderRadius: "24px",
     background:
-      "linear-gradient(180deg, rgba(15, 23, 42, 0.72), rgba(15, 23, 42, 0.52))",
+      "linear-gradient(145deg, rgba(15, 23, 42, 0.88), rgba(30, 41, 59, 0.72))",
     border: "1px solid rgba(148, 163, 184, 0.12)",
   },
-  summaryRow: {
+  continuationMeta: {
+    display: "grid",
+    gap: "8px",
+  },
+  trustGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gap: "12px",
+  },
+  trustCard: {
+    padding: "16px",
+    borderRadius: "20px",
+    border: "1px solid rgba(148, 163, 184, 0.1)",
+    backgroundColor: "rgba(255, 255, 255, 0.03)",
+    display: "grid",
+    gap: "8px",
+  },
+  trustTitle: {
+    margin: 0,
+    color: "#f8fafc",
+    fontSize: "0.94rem",
+    fontWeight: 700,
+  },
+  trustBody: {
+    margin: 0,
+    color: "#94a3b8",
+    fontSize: "0.84rem",
+    lineHeight: 1.5,
+  },
+  methodPreview: {
     display: "flex",
     justifyContent: "space-between",
     gap: "12px",
     alignItems: "center",
-    color: "#cbd5e1",
-    fontSize: "0.94rem",
-  },
-  buttonWrap: {
-    display: "grid",
-    gap: "14px",
-  },
-  loaderWrap: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: "48px",
+    padding: "16px",
+    borderRadius: "20px",
+    background:
+      "linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(15, 23, 42, 0.35))",
+    border: "1px solid rgba(96, 165, 250, 0.16)",
+    flexWrap: "wrap",
   },
 };
 
-const initialStatus = {
-  variant: "idle",
-  message: "Select a payment method to continue",
-  payment: null,
-};
-
-const statusContent = {
-  SUCCESS: {
-    variant: "success",
-    message: "Payment received",
-  },
-  FAILED: {
-    variant: "error",
-    message: "Payment could not be completed",
-  },
-  PENDING: {
-    variant: "pending",
-    message: "Payment is awaiting confirmation",
-  },
-};
-
-function Checkout({ cartItems, subtotal, orderId, onBack }) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState(initialStatus);
-  const [selectedMethod, setSelectedMethod] = useState("GOOGLE_PAY");
-  const [couponCode, setCouponCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState("");
-  const [upiId, setUpiId] = useState("");
-  const [cardDetails, setCardDetails] = useState({
-    number: "",
-    expiry: "",
-    cvv: "",
-  });
+function Checkout({
+  cartItems,
+  subtotal,
+  pricing,
+  orderId,
+  paymentMethods,
+  selectedMethod,
+  couponCode,
+  appliedCoupon,
+  onBack,
+  onContinue,
+  onMethodSelect,
+  onCouponChange,
+  onApplyCoupon,
+  isCompact = false,
+}) {
   const primaryItem = cartItems[0];
   const itemCount = cartItems.reduce((count, item) => count + item.quantity, 0);
-  const platformFee = subtotal > 0 ? 29 : 0;
-  const deliveryFee = subtotal >= 500 ? 0 : subtotal > 0 ? 49 : 0;
-  const gst = Math.round((subtotal + platformFee) * 0.18);
-  const discount =
-    appliedCoupon === "SAVE10" ? Math.min(Math.round(subtotal * 0.1), 120) : 0;
-  const total = subtotal + platformFee + deliveryFee + gst - discount;
-  const totalSaved = discount + (deliveryFee === 0 && subtotal > 0 ? 49 : 0);
-
-  const pricing = {
-    platformFee,
-    deliveryFee,
-    gst,
-    discount,
-    total,
-    totalSaved,
-  };
-
-  function handleMethodSelect(methodId) {
-    setSelectedMethod(methodId);
-    setPaymentStatus({
-      variant: "idle",
-      message: "Payment method updated",
-      payment: null,
-    });
-  }
-
-  function handleCardChange(field, value) {
-    setCardDetails((currentDetails) => ({
-      ...currentDetails,
-      [field]: value,
-    }));
-  }
-
-  function handleApplyCoupon() {
-    const normalizedCode = couponCode.trim().toUpperCase();
-
-    // Keeping coupon handling in local state makes the pricing demo
-    // realistic without introducing backend validation yet.
-    if (normalizedCode === "SAVE10") {
-      setAppliedCoupon(normalizedCode);
-      setPaymentStatus({
-        variant: "idle",
-        message: "Coupon applied to your order",
-        payment: null,
-      });
-      return;
-    }
-
-    setAppliedCoupon("");
-    setPaymentStatus({
-      variant: "error",
-      message: "Invalid mock coupon. Try SAVE10",
-      payment: null,
-    });
-  }
-
-  function getMethodLabel() {
-    return (
-      paymentMethods.find((method) => method.id === selectedMethod)?.label ||
-      "Payment Method"
-    );
-  }
-
-  function isPaymentDetailsReady() {
-    if (selectedMethod === "UPI") {
-      return upiId.trim().length > 0;
-    }
-
-    if (selectedMethod === "CARD") {
-      return (
-        cardDetails.number.trim().length > 0 &&
-        cardDetails.expiry.trim().length > 0 &&
-        cardDetails.cvv.trim().length > 0
-      );
-    }
-
-    return true;
-  }
-
-  async function handleMockPayment() {
-    if (!isPaymentDetailsReady()) {
-      setPaymentStatus({
-        variant: "error",
-        message:
-          selectedMethod === "UPI"
-            ? "Enter a mock UPI ID before continuing"
-            : "Complete the mock card fields before continuing",
-        payment: null,
-      });
-      return;
-    }
-
-    setIsLoading(true);
-      setPaymentStatus({
-        variant: "loading",
-        message: `Authorizing ${getMethodLabel()} payment`,
-      payment: null,
-    });
-
-    try {
-      // The selected method and mock details are passed so the payment flow
-      // feels closer to a real checkout without using live integrations.
-      const response = await simulatePayment({
-        method: getMethodLabel(),
-      });
-      const nextStatus = statusContent[response.status] || statusContent.PENDING;
-
-      setPaymentStatus({
-        variant: nextStatus.variant,
-        message: `${nextStatus.message} via ${getMethodLabel()}`,
-        payment: response,
-      });
-    } catch (error) {
-      setPaymentStatus({
-        variant: "error",
-        message: error.message || "Payment request failed",
-        payment: null,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  function handleRetryPayment() {
-    setPaymentStatus({
-      variant: "idle",
-      message: "Ready to try payment again",
-      payment: null,
-    });
-  }
+  const selectedMethodDetails = paymentMethods.find(
+    (method) => method.id === selectedMethod
+  );
 
   return (
     <main style={checkoutStyles.page}>
@@ -456,44 +278,50 @@ function Checkout({ cartItems, subtotal, orderId, onBack }) {
           <div style={checkoutStyles.header}>
             <div style={checkoutStyles.headerLeft}>
               <button type="button" onClick={onBack} style={checkoutStyles.backButton}>
-                Back to cart
+                Back to Cart
               </button>
               <span style={checkoutStyles.badge}>BuildX Payments</span>
-              <h1 style={checkoutStyles.heading}>Checkout</h1>
-              <p style={checkoutStyles.subtext}>Choose a payment method and pay</p>
+              <h1 style={checkoutStyles.heading}>Review your checkout</h1>
+              <p style={checkoutStyles.subtext}>
+                Confirm your order, keep totals visible, and head to payment with a
+                clear next step.
+              </p>
             </div>
 
             <span style={checkoutStyles.securePill}>Secure Demo</span>
           </div>
 
-          <div style={checkoutStyles.layout}>
+          <CheckoutStepper activeStep="checkout" compact={isCompact} />
+
+          <div
+            style={{
+              ...checkoutStyles.layout,
+              gridTemplateColumns: isCompact
+                ? "minmax(0, 1fr)"
+                : "minmax(0, 1.05fr) minmax(300px, 0.95fr)",
+            }}
+          >
             <div style={checkoutStyles.leftColumn}>
               <section style={checkoutStyles.productCard}>
                 <div style={checkoutStyles.productTop}>
                   <div>
-                    <p style={checkoutStyles.productLabel}>Product</p>
-                    <h2 style={checkoutStyles.productTitle}>
+                    <p style={checkoutStyles.sectionLabel}>Order</p>
+                    <h2 style={checkoutStyles.sectionTitle}>
                       {primaryItem?.title || "BuildX Starter Plan"}
                     </h2>
-                    <p style={checkoutStyles.productMeta}>
-                      {itemCount} item(s) in order
-                    </p>
+                    <p style={checkoutStyles.sectionMeta}>{itemCount} item(s) in order</p>
                   </div>
 
-                  <span style={checkoutStyles.chip}>Test Mode</span>
+                  <span style={checkoutStyles.chip}>Checkout Step</span>
                 </div>
 
                 <div style={checkoutStyles.divider} />
 
                 <div style={checkoutStyles.amountRow}>
                   <div>
-                    <p style={checkoutStyles.amountLabel}>Amount</p>
+                    <p style={checkoutStyles.amountLabel}>Estimated total</p>
                     <p style={checkoutStyles.amountValue}>
-                      {new Intl.NumberFormat("en-IN", {
-                        style: "currency",
-                        currency: "INR",
-                        maximumFractionDigits: 0,
-                      }).format(total)}
+                      {formatCurrency(pricing.total)}
                     </p>
                   </div>
 
@@ -507,16 +335,57 @@ function Checkout({ cartItems, subtotal, orderId, onBack }) {
               <PaymentMethodSelector
                 methods={paymentMethods}
                 selectedMethod={selectedMethod}
-                onSelect={handleMethodSelect}
+                onSelect={onMethodSelect}
               />
 
-              <PaymentMethodFields
-                selectedMethod={selectedMethod}
-                upiId={upiId}
-                cardDetails={cardDetails}
-                onUpiChange={setUpiId}
-                onCardChange={handleCardChange}
-              />
+              <section style={checkoutStyles.continuationCard}>
+                <div style={checkoutStyles.continuationMeta}>
+                  <p style={checkoutStyles.sectionLabel}>Payment Preview</p>
+                  <h3 style={checkoutStyles.sectionTitle}>Continue with confidence</h3>
+                  <p style={checkoutStyles.sectionMeta}>
+                    Your selected method, coupon, and pricing carry forward exactly as
+                    they are when you move to payment.
+                  </p>
+                </div>
+
+                <div style={checkoutStyles.methodPreview}>
+                  <div>
+                    <p style={checkoutStyles.sectionLabel}>Selected method</p>
+                    <p style={{ ...checkoutStyles.sectionTitle, margin: "8px 0 0" }}>
+                      {selectedMethodDetails?.label || "Google Pay"}
+                    </p>
+                  </div>
+
+                  <span style={checkoutStyles.chip}>
+                    {appliedCoupon ? `Coupon ${appliedCoupon}` : "No coupon applied"}
+                  </span>
+                </div>
+
+                <div style={checkoutStyles.trustGrid}>
+                  <article style={checkoutStyles.trustCard}>
+                    <p style={checkoutStyles.trustTitle}>Fast step-by-step flow</p>
+                    <p style={checkoutStyles.trustBody}>
+                      Review first, then pay. It mirrors familiar ecommerce behavior for
+                      less friction.
+                    </p>
+                  </article>
+
+                  <article style={checkoutStyles.trustCard}>
+                    <p style={checkoutStyles.trustTitle}>State stays intact</p>
+                    <p style={checkoutStyles.trustBody}>
+                      Cart items, totals, and payment preference stay preserved as you
+                      move around.
+                    </p>
+                  </article>
+
+                  <article style={checkoutStyles.trustCard}>
+                    <p style={checkoutStyles.trustTitle}>Mobile-friendly layout</p>
+                    <p style={checkoutStyles.trustBody}>
+                      Cards stack cleanly on smaller screens so the flow stays readable.
+                    </p>
+                  </article>
+                </div>
+              </section>
             </div>
 
             <div style={checkoutStyles.rightColumn}>
@@ -526,31 +395,30 @@ function Checkout({ cartItems, subtotal, orderId, onBack }) {
                 pricing={pricing}
                 couponCode={couponCode}
                 appliedCoupon={appliedCoupon}
-                onCouponChange={setCouponCode}
-                onApplyCoupon={handleApplyCoupon}
+                onCouponChange={onCouponChange}
+                onApplyCoupon={onApplyCoupon}
               />
 
-              <PaymentStatus
-                variant={paymentStatus.variant}
-                message={paymentStatus.message}
-                payment={paymentStatus.payment}
-                onRetry={paymentStatus.variant === "error" ? handleRetryPayment : null}
-              />
-
-              <div style={checkoutStyles.buttonWrap}>
+              <div style={{ display: "grid", gap: "14px" }}>
                 <PaymentButton
-                  label={`Pay with ${getMethodLabel()}`}
-                  onClick={handleMockPayment}
+                  label="Continue to Payment"
+                  onClick={onContinue}
                   disabled={cartItems.length === 0}
-                  loading={isLoading}
-                  futureAction="mock-payment-request"
+                  futureAction="move-to-payment"
                 />
 
-                {isLoading ? (
-                  <div style={checkoutStyles.loaderWrap}>
-                    <Loader label="Processing payment" size="small" />
-                  </div>
-                ) : null}
+                <p
+                  style={{
+                    margin: 0,
+                    color: "#94a3b8",
+                    fontSize: "0.84rem",
+                    lineHeight: 1.5,
+                    textAlign: isCompact ? "left" : "center",
+                  }}
+                >
+                  You can return from payment anytime and pick up from this exact
+                  checkout state.
+                </p>
               </div>
             </div>
           </div>
@@ -558,6 +426,14 @@ function Checkout({ cartItems, subtotal, orderId, onBack }) {
       </section>
     </main>
   );
+}
+
+function formatCurrency(amount) {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(amount);
 }
 
 export default Checkout;

@@ -144,7 +144,11 @@ function Cart({
                 letterSpacing: "-0.05em",
               }}
             >
-              ${subtotal.toFixed(2)}
+              {new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency: "INR",
+                maximumFractionDigits: 0,
+              }).format(subtotal)}
             </p>
           </div>
 
