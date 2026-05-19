@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import Loader from "../components/Loader.jsx";
+import OrderSummary from "../components/OrderSummary.jsx";
 import PaymentButton from "../components/PaymentButton.jsx";
 import PaymentMethodFields from "../components/PaymentMethodFields.jsx";
 import PaymentMethodSelector from "../components/PaymentMethodSelector.jsx";
@@ -305,6 +306,8 @@ function Checkout({ cartItems, subtotal, orderId, onBack }) {
   const [isLoading, setIsLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(initialStatus);
   const [selectedMethod, setSelectedMethod] = useState("GOOGLE_PAY");
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState("");
   const [upiId, setUpiId] = useState("");
   const [cardDetails, setCardDetails] = useState({
     number: "",
@@ -313,6 +316,22 @@ function Checkout({ cartItems, subtotal, orderId, onBack }) {
   });
   const primaryItem = cartItems[0];
   const itemCount = cartItems.reduce((count, item) => count + item.quantity, 0);
+  const platformFee = subtotal > 0 ? 29 : 0;
+  const deliveryFee = subtotal >= 500 ? 0 : subtotal > 0 ? 49 : 0;
+  const gst = Math.round((subtotal + platformFee) * 0.18);
+  const discount =
+    appliedCoupon === "SAVE10" ? Math.min(Math.round(subtotal * 0.1), 120) : 0;
+  const total = subtotal + platformFee + deliveryFee + gst - discount;
+  const totalSaved = discount + (deliveryFee === 0 && subtotal > 0 ? 49 : 0);
+
+  const pricing = {
+    platformFee,
+    deliveryFee,
+    gst,
+    discount,
+    total,
+    totalSaved,
+  };
 
   function handleMethodSelect(methodId) {
     setSelectedMethod(methodId);
@@ -328,6 +347,29 @@ function Checkout({ cartItems, subtotal, orderId, onBack }) {
       ...currentDetails,
       [field]: value,
     }));
+  }
+
+  function handleApplyCoupon() {
+    const normalizedCode = couponCode.trim().toUpperCase();
+
+    // Keeping coupon handling in local state makes the pricing demo
+    // realistic without introducing backend validation yet.
+    if (normalizedCode === "SAVE10") {
+      setAppliedCoupon(normalizedCode);
+      setPaymentStatus({
+        variant: "idle",
+        message: "Coupon applied to your order",
+        payment: null,
+      });
+      return;
+    }
+
+    setAppliedCoupon("");
+    setPaymentStatus({
+      variant: "error",
+      message: "Invalid mock coupon. Try SAVE10",
+      payment: null,
+    });
   }
 
   function getMethodLabel() {
@@ -367,9 +409,9 @@ function Checkout({ cartItems, subtotal, orderId, onBack }) {
     }
 
     setIsLoading(true);
-    setPaymentStatus({
-      variant: "loading",
-      message: `Authorizing ${getMethodLabel()} payment`,
+      setPaymentStatus({
+        variant: "loading",
+        message: `Authorizing ${getMethodLabel()} payment`,
       payment: null,
     });
 
@@ -446,7 +488,13 @@ function Checkout({ cartItems, subtotal, orderId, onBack }) {
                 <div style={checkoutStyles.amountRow}>
                   <div>
                     <p style={checkoutStyles.amountLabel}>Amount</p>
-                    <p style={checkoutStyles.amountValue}>${subtotal.toFixed(2)}</p>
+                    <p style={checkoutStyles.amountValue}>
+                      {new Intl.NumberFormat("en-IN", {
+                        style: "currency",
+                        currency: "INR",
+                        maximumFractionDigits: 0,
+                      }).format(total)}
+                    </p>
                   </div>
 
                   <div style={checkoutStyles.orderWrap}>
@@ -472,28 +520,15 @@ function Checkout({ cartItems, subtotal, orderId, onBack }) {
             </div>
 
             <div style={checkoutStyles.rightColumn}>
-              <section style={checkoutStyles.summaryCard}>
-                {cartItems.map((item) => (
-                  <div key={item.id} style={checkoutStyles.summaryRow}>
-                    <span>
-                      {item.title} x {item.quantity}
-                    </span>
-                    <strong>${(item.price * item.quantity).toFixed(2)}</strong>
-                  </div>
-                ))}
-
-                <div
-                  style={{
-                    ...checkoutStyles.summaryRow,
-                    paddingTop: "12px",
-                    borderTop: "1px solid rgba(148, 163, 184, 0.12)",
-                    color: "#f8fafc",
-                  }}
-                >
-                  <span>Subtotal</span>
-                  <strong>${subtotal.toFixed(2)}</strong>
-                </div>
-              </section>
+              <OrderSummary
+                cartItems={cartItems}
+                subtotal={subtotal}
+                pricing={pricing}
+                couponCode={couponCode}
+                appliedCoupon={appliedCoupon}
+                onCouponChange={setCouponCode}
+                onApplyCoupon={handleApplyCoupon}
+              />
 
               <PaymentStatus
                 variant={paymentStatus.variant}
