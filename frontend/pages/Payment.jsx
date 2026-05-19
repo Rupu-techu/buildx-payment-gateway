@@ -49,6 +49,7 @@ function Payment({
   onUpiChange,
   onCardChange,
   onBankChange,
+  onPaymentSuccess,
   isCompact = false,
 }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -129,6 +130,18 @@ function Payment({
         message: `${nextStatus.message} via ${getMethodLabel()}`,
         payment: response,
       });
+
+      if (response.status === "SUCCESS") {
+        onPaymentSuccess({
+          transactionId: response.paymentId,
+          method:
+            selectedMethod === "NET_BANKING"
+              ? `${getMethodLabel()} - ${selectedBank}`
+              : getMethodLabel(),
+          amount: formatCurrency(pricing.total),
+          orderId,
+        });
+      }
     } catch (error) {
       setPaymentStatus({
         variant: "error",
@@ -166,8 +179,8 @@ function Payment({
               <span style={paymentStyles.badge}>BuildX Payments</span>
               <h1 style={paymentStyles.heading}>Complete your payment</h1>
               <p style={paymentStyles.subtext}>
-                Confirm your method, finish securely, and keep your order details in
-                view.
+                Confirm your method, finish securely, and unlock your access the moment
+                payment succeeds.
               </p>
             </div>
 

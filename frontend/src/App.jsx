@@ -3,8 +3,10 @@ import { useEffect, useState } from "react";
 import Cart from "../components/Cart.jsx";
 import CheckoutStepper from "../components/CheckoutStepper.jsx";
 import ProductCard from "../components/ProductCard.jsx";
+import Dashboard from "../pages/Dashboard.jsx";
 import Checkout from "../pages/Checkout.jsx";
 import Payment from "../pages/Payment.jsx";
+import PaymentSuccess from "../pages/PaymentSuccess.jsx";
 import { calculatePricing, normalizeCouponCode } from "../utils/pricing.js";
 
 const appStyles = {
@@ -146,6 +148,7 @@ function App() {
     cvv: "",
   });
   const [selectedBank, setSelectedBank] = useState("SBI");
+  const [successfulPayment, setSuccessfulPayment] = useState(null);
   const [isCompact, setIsCompact] = useState(() => {
     if (typeof window === "undefined") {
       return false;
@@ -230,6 +233,44 @@ function App() {
     setStage("checkout");
   }
 
+  function handlePaymentSuccess(paymentDetails) {
+    setSuccessfulPayment(paymentDetails);
+    setStage("success");
+  }
+
+  function goToDashboard() {
+    setStage("dashboard");
+  }
+
+  function goBackHome() {
+    setStage("cart");
+  }
+
+  function downloadReceipt() {
+    if (!successfulPayment) {
+      return;
+    }
+
+    const receiptBody = [
+      "BuildX Payments Receipt",
+      "------------------------",
+      `Transaction ID: ${successfulPayment.transactionId}`,
+      `Order ID: ${successfulPayment.orderId}`,
+      `Payment Method: ${successfulPayment.method}`,
+      `Paid Amount: ${successfulPayment.amount}`,
+      "Status: Successful",
+      "Access: Unlocked",
+    ].join("\n");
+
+    const receiptBlob = new Blob([receiptBody], { type: "text/plain;charset=utf-8" });
+    const receiptUrl = window.URL.createObjectURL(receiptBlob);
+    const link = document.createElement("a");
+    link.href = receiptUrl;
+    link.download = `buildx-receipt-${successfulPayment.transactionId}.txt`;
+    link.click();
+    window.URL.revokeObjectURL(receiptUrl);
+  }
+
   function handleApplyCoupon() {
     setAppliedCoupon(normalizeCouponCode(couponCode));
   }
@@ -283,9 +324,25 @@ function App() {
         onUpiChange={setUpiId}
         onCardChange={handleCardChange}
         onBankChange={setSelectedBank}
+        onPaymentSuccess={handlePaymentSuccess}
         isCompact={isCompact}
       />
     );
+  }
+
+  if (stage === "success" && successfulPayment) {
+    return (
+      <PaymentSuccess
+        paymentDetails={successfulPayment}
+        onGoToDashboard={goToDashboard}
+        onBackToHome={goBackHome}
+        onDownloadReceipt={downloadReceipt}
+      />
+    );
+  }
+
+  if (stage === "dashboard") {
+    return <Dashboard onBackHome={goBackHome} />;
   }
 
   return (
