@@ -18,7 +18,7 @@ const checkoutStyles = {
   shell: {
     position: "relative",
     width: "100%",
-    maxWidth: "520px",
+    maxWidth: "560px",
   },
   glow: {
     position: "absolute",
@@ -41,16 +41,27 @@ const checkoutStyles = {
     backdropFilter: "blur(18px)",
     color: "#f8fafc",
   },
-  topRow: {
+  header: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: "16px",
-    marginBottom: "28px",
+    marginBottom: "24px",
+    flexWrap: "wrap",
   },
-  brandWrap: {
+  headerLeft: {
     display: "grid",
     gap: "8px",
+  },
+  backButton: {
+    border: "none",
+    padding: "0",
+    background: "transparent",
+    color: "#93c5fd",
+    fontSize: "0.9rem",
+    fontWeight: 600,
+    cursor: "pointer",
+    width: "fit-content",
   },
   badge: {
     display: "inline-flex",
@@ -178,6 +189,23 @@ const checkoutStyles = {
     gap: "18px",
     marginTop: "22px",
   },
+  summaryCard: {
+    display: "grid",
+    gap: "12px",
+    padding: "20px",
+    borderRadius: "22px",
+    background:
+      "linear-gradient(180deg, rgba(15, 23, 42, 0.72), rgba(15, 23, 42, 0.52))",
+    border: "1px solid rgba(148, 163, 184, 0.12)",
+  },
+  summaryRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "12px",
+    alignItems: "center",
+    color: "#cbd5e1",
+    fontSize: "0.94rem",
+  },
   buttonWrap: {
     display: "grid",
     gap: "14px",
@@ -211,14 +239,11 @@ const statusContent = {
   },
 };
 
-function Checkout() {
-  const paymentSummary = {
-    title: "BuildX Starter Plan",
-    amount: "$499.00",
-    orderId: "DEMO-001",
-  };
+function Checkout({ cartItems, subtotal, orderId, onBack }) {
   const [isLoading, setIsLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(initialStatus);
+  const primaryItem = cartItems[0];
+  const itemCount = cartItems.reduce((count, item) => count + item.quantity, 0);
 
   async function handleMockPayment() {
     setIsLoading(true);
@@ -260,11 +285,14 @@ function Checkout() {
         <div style={checkoutStyles.glow} aria-hidden="true" />
 
         <article style={checkoutStyles.card}>
-          <div style={checkoutStyles.topRow}>
-            <div style={checkoutStyles.brandWrap}>
+          <div style={checkoutStyles.header}>
+            <div style={checkoutStyles.headerLeft}>
+              <button type="button" onClick={onBack} style={checkoutStyles.backButton}>
+                Back to cart
+              </button>
               <span style={checkoutStyles.badge}>BuildX Payments</span>
               <h1 style={checkoutStyles.heading}>Checkout</h1>
-              <p style={checkoutStyles.subtext}>Premium demo payment flow</p>
+              <p style={checkoutStyles.subtext}>Secure demo payment flow</p>
             </div>
 
             <span style={checkoutStyles.securePill}>Secure Demo</span>
@@ -274,8 +302,10 @@ function Checkout() {
             <div style={checkoutStyles.productTop}>
               <div>
                 <p style={checkoutStyles.productLabel}>Product</p>
-                <h2 style={checkoutStyles.productTitle}>{paymentSummary.title}</h2>
-                <p style={checkoutStyles.productMeta}>Subscription access</p>
+                <h2 style={checkoutStyles.productTitle}>
+                  {primaryItem?.title || "BuildX Starter Plan"}
+                </h2>
+                <p style={checkoutStyles.productMeta}>{itemCount} item(s) in order</p>
               </div>
 
               <span style={checkoutStyles.chip}>Test Mode</span>
@@ -286,17 +316,40 @@ function Checkout() {
             <div style={checkoutStyles.amountRow}>
               <div>
                 <p style={checkoutStyles.amountLabel}>Amount</p>
-                <p style={checkoutStyles.amountValue}>{paymentSummary.amount}</p>
+                <p style={checkoutStyles.amountValue}>${subtotal.toFixed(2)}</p>
               </div>
 
               <div style={checkoutStyles.orderWrap}>
                 <p style={checkoutStyles.orderLabel}>Order ID</p>
-                <p style={checkoutStyles.orderValue}>{paymentSummary.orderId}</p>
+                <p style={checkoutStyles.orderValue}>{orderId}</p>
               </div>
             </div>
           </section>
 
           <div style={checkoutStyles.contentStack}>
+            <section style={checkoutStyles.summaryCard}>
+              {cartItems.map((item) => (
+                <div key={item.id} style={checkoutStyles.summaryRow}>
+                  <span>
+                    {item.title} x {item.quantity}
+                  </span>
+                  <strong>${(item.price * item.quantity).toFixed(2)}</strong>
+                </div>
+              ))}
+
+              <div
+                style={{
+                  ...checkoutStyles.summaryRow,
+                  paddingTop: "12px",
+                  borderTop: "1px solid rgba(148, 163, 184, 0.12)",
+                  color: "#f8fafc",
+                }}
+              >
+                <span>Subtotal</span>
+                <strong>${subtotal.toFixed(2)}</strong>
+              </div>
+            </section>
+
             <PaymentStatus
               variant={paymentStatus.variant}
               message={paymentStatus.message}
@@ -308,7 +361,7 @@ function Checkout() {
               <PaymentButton
                 label="Pay Now"
                 onClick={handleMockPayment}
-                disabled={false}
+                disabled={cartItems.length === 0}
                 loading={isLoading}
                 futureAction="mock-payment-request"
               />
