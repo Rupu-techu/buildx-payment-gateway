@@ -118,7 +118,7 @@ function PaymentStatus({ variant = "idle", message, payment, onRetry }) {
             paddingTop: "16px",
             borderTop: "1px solid rgba(148, 163, 184, 0.12)",
             display: "grid",
-            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+            gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
             gap: "12px",
           }}
         >
@@ -135,6 +135,10 @@ function PaymentStatus({ variant = "idle", message, payment, onRetry }) {
           <div>
             <p style={metaLabelStyle}>State</p>
             <p style={metaValueStyle}>{payment.status}</p>
+          </div>
+          <div>
+            <p style={metaLabelStyle}>Method</p>
+            <p style={metaValueStyle}>{payment.method}</p>
           </div>
         </div>
       ) : null}

@@ -2,8 +2,61 @@ import { useState } from "react";
 
 import Loader from "../components/Loader.jsx";
 import PaymentButton from "../components/PaymentButton.jsx";
+import PaymentMethodFields from "../components/PaymentMethodFields.jsx";
+import PaymentMethodSelector from "../components/PaymentMethodSelector.jsx";
 import PaymentStatus from "../components/PaymentStatus.jsx";
 import { simulatePayment } from "../services/paymentService.js";
+
+const paymentMethods = [
+  {
+    id: "GOOGLE_PAY",
+    label: "Google Pay",
+    icon: "G",
+    description: "One-tap checkout",
+    iconBackground: "rgba(96, 165, 250, 0.18)",
+    iconColor: "#bfdbfe",
+  },
+  {
+    id: "PHONEPE",
+    label: "PhonePe",
+    icon: "P",
+    description: "UPI app payment",
+    iconBackground: "rgba(167, 139, 250, 0.2)",
+    iconColor: "#ddd6fe",
+  },
+  {
+    id: "PAYTM",
+    label: "Paytm",
+    icon: "PT",
+    description: "Wallet or UPI",
+    iconBackground: "rgba(45, 212, 191, 0.16)",
+    iconColor: "#99f6e4",
+  },
+  {
+    id: "UPI",
+    label: "UPI",
+    icon: "U",
+    description: "Enter UPI ID",
+    iconBackground: "rgba(251, 191, 36, 0.18)",
+    iconColor: "#fde68a",
+  },
+  {
+    id: "CARD",
+    label: "Credit / Debit Card",
+    icon: "CD",
+    description: "Card number and CVV",
+    iconBackground: "rgba(248, 250, 252, 0.14)",
+    iconColor: "#e2e8f0",
+  },
+  {
+    id: "NET_BANKING",
+    label: "Net Banking",
+    icon: "NB",
+    description: "Bank transfer flow",
+    iconBackground: "rgba(74, 222, 128, 0.16)",
+    iconColor: "#bbf7d0",
+  },
+];
 
 const checkoutStyles = {
   page: {
@@ -18,7 +71,7 @@ const checkoutStyles = {
   shell: {
     position: "relative",
     width: "100%",
-    maxWidth: "560px",
+    maxWidth: "920px",
   },
   glow: {
     position: "absolute",
@@ -99,6 +152,20 @@ const checkoutStyles = {
     fontSize: "0.78rem",
     fontWeight: 700,
     whiteSpace: "nowrap",
+  },
+  layout: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1.05fr) minmax(300px, 0.95fr)",
+    gap: "20px",
+    alignItems: "start",
+  },
+  leftColumn: {
+    display: "grid",
+    gap: "18px",
+  },
+  rightColumn: {
+    display: "grid",
+    gap: "18px",
   },
   productCard: {
     padding: "24px",
@@ -184,11 +251,6 @@ const checkoutStyles = {
     fontSize: "0.92rem",
     fontWeight: 600,
   },
-  contentStack: {
-    display: "grid",
-    gap: "18px",
-    marginTop: "22px",
-  },
   summaryCard: {
     display: "grid",
     gap: "12px",
@@ -220,7 +282,7 @@ const checkoutStyles = {
 
 const initialStatus = {
   variant: "idle",
-  message: "Ready to process payment",
+  message: "Select a payment method to continue",
   payment: null,
 };
 
@@ -242,26 +304,86 @@ const statusContent = {
 function Checkout({ cartItems, subtotal, orderId, onBack }) {
   const [isLoading, setIsLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(initialStatus);
+  const [selectedMethod, setSelectedMethod] = useState("GOOGLE_PAY");
+  const [upiId, setUpiId] = useState("");
+  const [cardDetails, setCardDetails] = useState({
+    number: "",
+    expiry: "",
+    cvv: "",
+  });
   const primaryItem = cartItems[0];
   const itemCount = cartItems.reduce((count, item) => count + item.quantity, 0);
 
+  function handleMethodSelect(methodId) {
+    setSelectedMethod(methodId);
+    setPaymentStatus({
+      variant: "idle",
+      message: "Payment method updated",
+      payment: null,
+    });
+  }
+
+  function handleCardChange(field, value) {
+    setCardDetails((currentDetails) => ({
+      ...currentDetails,
+      [field]: value,
+    }));
+  }
+
+  function getMethodLabel() {
+    return (
+      paymentMethods.find((method) => method.id === selectedMethod)?.label ||
+      "Payment Method"
+    );
+  }
+
+  function isPaymentDetailsReady() {
+    if (selectedMethod === "UPI") {
+      return upiId.trim().length > 0;
+    }
+
+    if (selectedMethod === "CARD") {
+      return (
+        cardDetails.number.trim().length > 0 &&
+        cardDetails.expiry.trim().length > 0 &&
+        cardDetails.cvv.trim().length > 0
+      );
+    }
+
+    return true;
+  }
+
   async function handleMockPayment() {
+    if (!isPaymentDetailsReady()) {
+      setPaymentStatus({
+        variant: "error",
+        message:
+          selectedMethod === "UPI"
+            ? "Enter a mock UPI ID before continuing"
+            : "Complete the mock card fields before continuing",
+        payment: null,
+      });
+      return;
+    }
+
     setIsLoading(true);
     setPaymentStatus({
       variant: "loading",
-      message: "Authorizing secure transaction",
+      message: `Authorizing ${getMethodLabel()} payment`,
       payment: null,
     });
 
     try {
-      // This keeps the polished UI connected to a fake service now,
-      // so swapping in a real API later stays straightforward.
-      const response = await simulatePayment();
+      // The selected method and mock details are passed so the payment flow
+      // feels closer to a real checkout without using live integrations.
+      const response = await simulatePayment({
+        method: getMethodLabel(),
+      });
       const nextStatus = statusContent[response.status] || statusContent.PENDING;
 
       setPaymentStatus({
         variant: nextStatus.variant,
-        message: nextStatus.message,
+        message: `${nextStatus.message} via ${getMethodLabel()}`,
         payment: response,
       });
     } catch (error) {
@@ -276,7 +398,11 @@ function Checkout({ cartItems, subtotal, orderId, onBack }) {
   }
 
   function handleRetryPayment() {
-    setPaymentStatus(initialStatus);
+    setPaymentStatus({
+      variant: "idle",
+      message: "Ready to try payment again",
+      payment: null,
+    });
   }
 
   return (
@@ -292,85 +418,105 @@ function Checkout({ cartItems, subtotal, orderId, onBack }) {
               </button>
               <span style={checkoutStyles.badge}>BuildX Payments</span>
               <h1 style={checkoutStyles.heading}>Checkout</h1>
-              <p style={checkoutStyles.subtext}>Secure demo payment flow</p>
+              <p style={checkoutStyles.subtext}>Choose a payment method and pay</p>
             </div>
 
             <span style={checkoutStyles.securePill}>Secure Demo</span>
           </div>
 
-          <section style={checkoutStyles.productCard}>
-            <div style={checkoutStyles.productTop}>
-              <div>
-                <p style={checkoutStyles.productLabel}>Product</p>
-                <h2 style={checkoutStyles.productTitle}>
-                  {primaryItem?.title || "BuildX Starter Plan"}
-                </h2>
-                <p style={checkoutStyles.productMeta}>{itemCount} item(s) in order</p>
-              </div>
+          <div style={checkoutStyles.layout}>
+            <div style={checkoutStyles.leftColumn}>
+              <section style={checkoutStyles.productCard}>
+                <div style={checkoutStyles.productTop}>
+                  <div>
+                    <p style={checkoutStyles.productLabel}>Product</p>
+                    <h2 style={checkoutStyles.productTitle}>
+                      {primaryItem?.title || "BuildX Starter Plan"}
+                    </h2>
+                    <p style={checkoutStyles.productMeta}>
+                      {itemCount} item(s) in order
+                    </p>
+                  </div>
 
-              <span style={checkoutStyles.chip}>Test Mode</span>
-            </div>
-
-            <div style={checkoutStyles.divider} />
-
-            <div style={checkoutStyles.amountRow}>
-              <div>
-                <p style={checkoutStyles.amountLabel}>Amount</p>
-                <p style={checkoutStyles.amountValue}>${subtotal.toFixed(2)}</p>
-              </div>
-
-              <div style={checkoutStyles.orderWrap}>
-                <p style={checkoutStyles.orderLabel}>Order ID</p>
-                <p style={checkoutStyles.orderValue}>{orderId}</p>
-              </div>
-            </div>
-          </section>
-
-          <div style={checkoutStyles.contentStack}>
-            <section style={checkoutStyles.summaryCard}>
-              {cartItems.map((item) => (
-                <div key={item.id} style={checkoutStyles.summaryRow}>
-                  <span>
-                    {item.title} x {item.quantity}
-                  </span>
-                  <strong>${(item.price * item.quantity).toFixed(2)}</strong>
+                  <span style={checkoutStyles.chip}>Test Mode</span>
                 </div>
-              ))}
 
-              <div
-                style={{
-                  ...checkoutStyles.summaryRow,
-                  paddingTop: "12px",
-                  borderTop: "1px solid rgba(148, 163, 184, 0.12)",
-                  color: "#f8fafc",
-                }}
-              >
-                <span>Subtotal</span>
-                <strong>${subtotal.toFixed(2)}</strong>
-              </div>
-            </section>
+                <div style={checkoutStyles.divider} />
 
-            <PaymentStatus
-              variant={paymentStatus.variant}
-              message={paymentStatus.message}
-              payment={paymentStatus.payment}
-              onRetry={paymentStatus.variant === "error" ? handleRetryPayment : null}
-            />
+                <div style={checkoutStyles.amountRow}>
+                  <div>
+                    <p style={checkoutStyles.amountLabel}>Amount</p>
+                    <p style={checkoutStyles.amountValue}>${subtotal.toFixed(2)}</p>
+                  </div>
 
-            <div style={checkoutStyles.buttonWrap}>
-              <PaymentButton
-                label="Pay Now"
-                onClick={handleMockPayment}
-                disabled={cartItems.length === 0}
-                loading={isLoading}
-                futureAction="mock-payment-request"
+                  <div style={checkoutStyles.orderWrap}>
+                    <p style={checkoutStyles.orderLabel}>Order ID</p>
+                    <p style={checkoutStyles.orderValue}>{orderId}</p>
+                  </div>
+                </div>
+              </section>
+
+              <PaymentMethodSelector
+                methods={paymentMethods}
+                selectedMethod={selectedMethod}
+                onSelect={handleMethodSelect}
               />
 
-              {isLoading ? (
-                <div style={checkoutStyles.loaderWrap}>
-                  <Loader label="Processing payment" size="small" />
+              <PaymentMethodFields
+                selectedMethod={selectedMethod}
+                upiId={upiId}
+                cardDetails={cardDetails}
+                onUpiChange={setUpiId}
+                onCardChange={handleCardChange}
+              />
+            </div>
+
+            <div style={checkoutStyles.rightColumn}>
+              <section style={checkoutStyles.summaryCard}>
+                {cartItems.map((item) => (
+                  <div key={item.id} style={checkoutStyles.summaryRow}>
+                    <span>
+                      {item.title} x {item.quantity}
+                    </span>
+                    <strong>${(item.price * item.quantity).toFixed(2)}</strong>
+                  </div>
+                ))}
+
+                <div
+                  style={{
+                    ...checkoutStyles.summaryRow,
+                    paddingTop: "12px",
+                    borderTop: "1px solid rgba(148, 163, 184, 0.12)",
+                    color: "#f8fafc",
+                  }}
+                >
+                  <span>Subtotal</span>
+                  <strong>${subtotal.toFixed(2)}</strong>
                 </div>
-              ) : null}
+              </section>
+
+              <PaymentStatus
+                variant={paymentStatus.variant}
+                message={paymentStatus.message}
+                payment={paymentStatus.payment}
+                onRetry={paymentStatus.variant === "error" ? handleRetryPayment : null}
+              />
+
+              <div style={checkoutStyles.buttonWrap}>
+                <PaymentButton
+                  label={`Pay with ${getMethodLabel()}`}
+                  onClick={handleMockPayment}
+                  disabled={cartItems.length === 0}
+                  loading={isLoading}
+                  futureAction="mock-payment-request"
+                />
+
+                {isLoading ? (
+                  <div style={checkoutStyles.loaderWrap}>
+                    <Loader label="Processing payment" size="small" />
+                  </div>
+                ) : null}
+              </div>
             </div>
           </div>
         </article>
