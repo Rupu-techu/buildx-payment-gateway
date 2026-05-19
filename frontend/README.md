@@ -1,43 +1,16 @@
-# Frontend
+# React + Vite
 
-This folder contains the frontend foundation for the React.js side of the Payment Gateway module.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Purpose
+Currently, two official plugins are available:
 
-- Provide a clean starting point for the payment-related user interface
-- Keep the project structure simple for beginners
-- Leave room for future growth as payment features are added
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Folder Structure
+## React Compiler
 
-```text
-frontend/
-|-- assets/
-|   `-- README.md
-|-- components/
-|   `-- README.md
-|-- pages/
-|   `-- README.md
-|-- services/
-|   `-- README.md
-|-- src/
-|   |-- App.jsx
-|   |-- main.jsx
-|   `-- README.md
-|-- utils/
-|   `-- README.md
-`-- README.md
-```
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## Folder Guide
+## Expanding the ESLint configuration
 
-- `src/` stores the main React entry files.
-- `components/` stores reusable UI components.
-- `pages/` stores screen-level page components.
-- `services/` stores API and external service integrations.
-- `utils/` stores helper functions and shared utilities.
-- `assets/` stores static files such as images, icons, and future branding resources.
-
-## Notes
-
-This setup includes placeholder files only. No payment workflow or business logic has been added yet.
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
