@@ -1,5 +1,5 @@
 function Loader({ label = "Processing payment...", size = "medium" }) {
-  const dimensions = size === "small" ? "16px" : "28px";
+  const dimensions = size === "small" ? "16px" : "24px";
   const borderWidth = size === "small" ? "2px" : "3px";
 
   return (
@@ -7,7 +7,7 @@ function Loader({ label = "Processing payment...", size = "medium" }) {
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: "0.65rem",
+        gap: "12px",
         color: "#334155",
       }}
     >
@@ -19,6 +19,7 @@ function Loader({ label = "Processing payment...", size = "medium" }) {
           }
         `}
       </style>
+
       <span
         aria-hidden="true"
         style={{
@@ -30,6 +31,7 @@ function Loader({ label = "Processing payment...", size = "medium" }) {
           animation: "payment-spin 0.8s linear infinite",
         }}
       />
+
       <span style={{ fontSize: size === "small" ? "0.95rem" : "1rem" }}>
         {label}
       </span>

@@ -1,4 +1,9 @@
+import { useState } from "react";
+
+import Loader from "../components/Loader.jsx";
 import PaymentButton from "../components/PaymentButton.jsx";
+import PaymentStatus from "../components/PaymentStatus.jsx";
+import { simulatePayment } from "../services/paymentService.js";
 
 const checkoutStyles = {
   page: {
@@ -161,6 +166,35 @@ const checkoutStyles = {
     fontSize: "0.92rem",
     lineHeight: 1.6,
   },
+  loaderWrap: {
+    marginTop: "18px",
+    padding: "14px 16px",
+    borderRadius: "16px",
+    backgroundColor: "#eff6ff",
+    border: "1px solid #bfdbfe",
+  },
+};
+
+const initialStatus = {
+  variant: "idle",
+  message: "Click Pay Now to simulate a frontend payment response.",
+  payment: null,
+};
+
+const statusContent = {
+  SUCCESS: {
+    variant: "success",
+    message: "Payment completed successfully. The mock transaction was approved.",
+  },
+  FAILED: {
+    variant: "error",
+    message: "Payment failed in the demo flow. You can retry the payment safely.",
+  },
+  PENDING: {
+    variant: "pending",
+    message:
+      "Payment is pending. The request was created, but final confirmation has not arrived yet.",
+  },
 };
 
 function Checkout() {
@@ -170,11 +204,42 @@ function Checkout() {
       "A sample order screen for the Payment Gateway module. This keeps the first UI simple while we prepare the real payment flow.",
     amount: "$499.00",
   };
+  const [isLoading, setIsLoading] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState(initialStatus);
 
-  function handleMockPayment() {
-    // This placeholder keeps the button wired for future API integration
-    // without introducing real payment logic in the first UI milestone.
-    window.alert("Payment API integration will be added in the next step.");
+  async function handleMockPayment() {
+    setIsLoading(true);
+    setPaymentStatus({
+      variant: "loading",
+      message: "Sending mock payment request and waiting for a sample response...",
+      payment: null,
+    });
+
+    try {
+      // The service returns a fake response after a short delay so the UI
+      // behaves like a real API-driven checkout flow.
+      const response = await simulatePayment();
+      const nextStatus = statusContent[response.status] || statusContent.PENDING;
+
+      setPaymentStatus({
+        variant: nextStatus.variant,
+        message: nextStatus.message,
+        payment: response,
+      });
+    } catch (error) {
+      setPaymentStatus({
+        variant: "error",
+        message:
+          error.message || "The mock payment request could not be completed.",
+        payment: null,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function handleRetryPayment() {
+    setPaymentStatus(initialStatus);
   }
 
   return (
@@ -184,22 +249,23 @@ function Checkout() {
           <span style={checkoutStyles.badge}>Payment Gateway Module</span>
           <h1 style={checkoutStyles.title}>Build a clean checkout experience.</h1>
           <p style={checkoutStyles.lead}>
-            This starter screen gives the frontend a professional payment layout
-            with a mock product card, clear amount display, and a reusable
-            button component for upcoming backend integration.
+            This screen now includes a mock payment interaction flow with
+            loading, sample API-style responses, and reusable status handling
+            components for beginner-friendly development.
           </p>
 
           <div style={checkoutStyles.featureList}>
             <div style={checkoutStyles.featureItem}>
-              Project title and checkout summary are visible at first glance.
+              Clicking the payment button simulates a real request/response
+              cycle.
             </div>
             <div style={checkoutStyles.featureItem}>
-              The payment button is reusable and ready to receive API-related
-              props later.
+              Success, failed, and pending states each render different user
+              feedback.
             </div>
             <div style={checkoutStyles.featureItem}>
-              The layout stays readable on desktop and mobile with a responsive
-              two-column grid.
+              The retry action appears only when the payment fails, keeping the
+              flow simple and focused.
             </div>
           </div>
         </article>
@@ -231,24 +297,39 @@ function Checkout() {
             <p style={checkoutStyles.amountLabel}>Payment Amount</p>
             <p style={checkoutStyles.amountValue}>{paymentSummary.amount}</p>
             <p style={checkoutStyles.amountNote}>
-              No real charge will happen here. This button only prepares the UI
-              flow for the future payment API.
+              No real charge will happen here. This button only simulates a
+              payment response for frontend testing.
             </p>
           </div>
 
           <div style={checkoutStyles.buttonWrap}>
             <PaymentButton
-              label="Proceed to Pay"
+              label="Pay Now"
               onClick={handleMockPayment}
               disabled={false}
-              loading={false}
-              futureAction="create-order"
+              loading={isLoading}
+              futureAction="mock-payment-request"
+            />
+          </div>
+
+          {isLoading ? (
+            <div style={checkoutStyles.loaderWrap}>
+              <Loader label="Processing your mock payment..." />
+            </div>
+          ) : null}
+
+          <div style={{ marginTop: "18px" }}>
+            <PaymentStatus
+              variant={paymentStatus.variant}
+              message={paymentStatus.message}
+              payment={paymentStatus.payment}
+              onRetry={paymentStatus.variant === "error" ? handleRetryPayment : null}
             />
           </div>
 
           <p style={checkoutStyles.helperText}>
-            Next step: connect this button to your order creation endpoint and
-            payment verification flow.
+            Next step: replace the mock service with your real order creation
+            and payment verification API calls when the backend is ready.
           </p>
         </article>
       </section>
