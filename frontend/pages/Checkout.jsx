@@ -283,8 +283,8 @@ function Checkout({
               <span style={checkoutStyles.badge}>BuildX Payments</span>
               <h1 style={checkoutStyles.heading}>Review your checkout</h1>
               <p style={checkoutStyles.subtext}>
-                Confirm your order, keep totals visible, and head to payment with a
-                clear next step.
+                Confirm your subscription, keep totals visible, and continue to secure
+                payment with instant activation.
               </p>
             </div>
 
@@ -344,7 +344,8 @@ function Checkout({
                   <h3 style={checkoutStyles.sectionTitle}>Continue with confidence</h3>
                   <p style={checkoutStyles.sectionMeta}>
                     Your selected method, coupon, and pricing carry forward exactly as
-                    they are when you move to payment.
+                    they are when you move to payment, with instant access right after
+                    checkout.
                   </p>
                 </div>
 
@@ -365,8 +366,8 @@ function Checkout({
                   <article style={checkoutStyles.trustCard}>
                     <p style={checkoutStyles.trustTitle}>Fast step-by-step flow</p>
                     <p style={checkoutStyles.trustBody}>
-                      Review first, then pay. It mirrors familiar ecommerce behavior for
-                      less friction.
+                      Review first, then activate. The flow feels closer to a premium
+                      learning or SaaS purchase.
                     </p>
                   </article>
 
@@ -374,14 +375,15 @@ function Checkout({
                     <p style={checkoutStyles.trustTitle}>State stays intact</p>
                     <p style={checkoutStyles.trustBody}>
                       Cart items, totals, and payment preference stay preserved as you
-                      move around.
+                      move around the digital checkout.
                     </p>
                   </article>
 
                   <article style={checkoutStyles.trustCard}>
                     <p style={checkoutStyles.trustTitle}>Mobile-friendly layout</p>
                     <p style={checkoutStyles.trustBody}>
-                      Cards stack cleanly on smaller screens so the flow stays readable.
+                      Cards stack cleanly on smaller screens so subscription checkout
+                      stays readable.
                     </p>
                   </article>
                 </div>

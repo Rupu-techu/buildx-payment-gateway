@@ -2,15 +2,81 @@ function PaymentMethodFields({
   selectedMethod,
   upiId,
   cardDetails,
+  selectedBank,
   onUpiChange,
   onCardChange,
+  onBankChange,
 }) {
+  if (selectedMethod === "GOOGLE_PAY" || selectedMethod === "PHONEPE") {
+    const brandDetails =
+      selectedMethod === "GOOGLE_PAY"
+        ? {
+            title: "Continue with Google Pay",
+            label: "Google Pay",
+            accent: "#60a5fa",
+            panel: "linear-gradient(135deg, rgba(37, 99, 235, 0.18), rgba(15, 23, 42, 0.58))",
+            message:
+              "You will continue into a fast app-style approval flow and unlock access as soon as payment succeeds.",
+            action: "Open Google Pay flow",
+          }
+        : {
+            title: "Continue with PhonePe",
+            label: "PhonePe",
+            accent: "#c084fc",
+            panel: "linear-gradient(135deg, rgba(126, 34, 206, 0.2), rgba(15, 23, 42, 0.58))",
+            message:
+              "This mock step simulates direct PhonePe approval for a smooth mobile-first digital checkout.",
+            action: "Open PhonePe flow",
+          };
+
+    return (
+      <section style={{ ...panelStyle, background: brandDetails.panel }}>
+        <div style={heroRowStyle}>
+          <div>
+            <p style={sectionLabelStyle}>Express Checkout</p>
+            <h3 style={sectionTitleStyle}>{brandDetails.title}</h3>
+          </div>
+          <span
+            style={{
+              ...badgeStyle,
+              border: `1px solid ${brandDetails.accent}33`,
+              color: brandDetails.accent,
+            }}
+          >
+            Instant Access
+          </span>
+        </div>
+
+        <p style={supportCopyStyle}>{brandDetails.message}</p>
+
+        <div style={infoGridStyle}>
+          <article style={infoCardStyle}>
+            <p style={fieldLabelStyle}>Experience</p>
+            <p style={valueCopyStyle}>Secure in-app confirmation</p>
+          </article>
+          <article style={infoCardStyle}>
+            <p style={fieldLabelStyle}>Activation</p>
+            <p style={valueCopyStyle}>Subscription starts immediately</p>
+          </article>
+        </div>
+
+        <div style={actionPanelStyle}>
+          <span style={{ ...logoDotStyle, backgroundColor: brandDetails.accent }} />
+          <div>
+            <p style={fieldLabelStyle}>{brandDetails.label}</p>
+            <p style={valueCopyStyle}>{brandDetails.action}</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   if (selectedMethod === "UPI") {
     return (
       <section style={panelStyle}>
         <div>
           <p style={sectionLabelStyle}>UPI Details</p>
-          <h3 style={sectionTitleStyle}>Pay with UPI</h3>
+          <h3 style={sectionTitleStyle}>Pay with UPI and activate instantly</h3>
         </div>
 
         <label style={fieldGroupStyle}>
@@ -20,9 +86,18 @@ function PaymentMethodFields({
             value={upiId}
             onChange={(event) => onUpiChange(event.target.value)}
             placeholder="name@upi"
-            style={inputStyle}
+            style={{
+              ...inputStyle,
+              minHeight: upiId.trim() ? "64px" : "52px",
+              fontSize: upiId.trim() ? "1rem" : "0.96rem",
+            }}
           />
         </label>
+
+        <p style={supportCopyStyle}>
+          Enter a mock UPI ID to simulate direct approval. Your course or subscription
+          access starts right after payment.
+        </p>
       </section>
     );
   }
@@ -32,11 +107,20 @@ function PaymentMethodFields({
       <section style={panelStyle}>
         <div>
           <p style={sectionLabelStyle}>Card Details</p>
-          <h3 style={sectionTitleStyle}>Enter card information</h3>
+          <h3 style={sectionTitleStyle}>Enter your card information</h3>
         </div>
 
-        {/* These fields stay mock-only for the demo, but mirror the layout
-            users expect in a real ecommerce checkout. */}
+        <label style={fieldGroupStyle}>
+          <span style={fieldLabelStyle}>Cardholder Name</span>
+          <input
+            type="text"
+            value={cardDetails.name}
+            onChange={(event) => onCardChange("name", event.target.value)}
+            placeholder="Aarav Sharma"
+            style={inputStyle}
+          />
+        </label>
+
         <label style={fieldGroupStyle}>
           <span style={fieldLabelStyle}>Card Number</span>
           <input
@@ -77,15 +161,47 @@ function PaymentMethodFields({
             />
           </label>
         </div>
+
+        <p style={supportCopyStyle}>
+          Your payment is simulated locally, but the layout mirrors a premium digital
+          subscription checkout.
+        </p>
+      </section>
+    );
+  }
+
+  if (selectedMethod === "NET_BANKING") {
+    return (
+      <section style={panelStyle}>
+        <div>
+          <p style={sectionLabelStyle}>Net Banking</p>
+          <h3 style={sectionTitleStyle}>Choose your bank</h3>
+        </div>
+
+        <label style={fieldGroupStyle}>
+          <span style={fieldLabelStyle}>Preferred Bank</span>
+          <select
+            value={selectedBank}
+            onChange={(event) => onBankChange(event.target.value)}
+            style={inputStyle}
+          >
+            <option value="SBI">SBI</option>
+            <option value="HDFC">HDFC</option>
+            <option value="ICICI">ICICI</option>
+            <option value="Axis Bank">Axis Bank</option>
+          </select>
+        </label>
+
+        <p style={supportCopyStyle}>
+          You will be redirected to your bank's secure login page and brought back with
+          instant access once the payment succeeds.
+        </p>
       </section>
     );
   }
 
   const methodMessages = {
-    GOOGLE_PAY: "Complete payment quickly using your linked Google Pay account.",
-    PHONEPE: "Use your saved PhonePe setup for a fast mobile-first payment.",
-    PAYTM: "Continue with Paytm wallet or saved instruments in demo mode.",
-    NET_BANKING: "Choose your bank in the next step of the mock payment flow.",
+    PAYTM: "Use your digital wallet for a quick subscription checkout and instant activation.",
   };
 
   return (
@@ -96,12 +212,7 @@ function PaymentMethodFields({
       </div>
 
       <p
-        style={{
-          margin: 0,
-          color: "#94a3b8",
-          fontSize: "0.92rem",
-          lineHeight: 1.6,
-        }}
+        style={supportCopyStyle}
       >
         {methodMessages[selectedMethod]}
       </p>
@@ -117,6 +228,7 @@ const panelStyle = {
   background:
     "linear-gradient(180deg, rgba(15, 23, 42, 0.72), rgba(15, 23, 42, 0.52))",
   border: "1px solid rgba(148, 163, 184, 0.12)",
+  overflow: "hidden",
 };
 
 const sectionLabelStyle = {
@@ -156,6 +268,69 @@ const inputStyle = {
   color: "#f8fafc",
   padding: "0 16px",
   outline: "none",
+};
+
+const supportCopyStyle = {
+  margin: 0,
+  color: "#94a3b8",
+  fontSize: "0.92rem",
+  lineHeight: 1.6,
+};
+
+const heroRowStyle = {
+  display: "flex",
+  justifyContent: "space-between",
+  gap: "12px",
+  alignItems: "flex-start",
+  flexWrap: "wrap",
+};
+
+const badgeStyle = {
+  padding: "8px 12px",
+  borderRadius: "999px",
+  backgroundColor: "rgba(255, 255, 255, 0.05)",
+  fontSize: "0.78rem",
+  fontWeight: 700,
+};
+
+const infoGridStyle = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+  gap: "12px",
+};
+
+const infoCardStyle = {
+  display: "grid",
+  gap: "6px",
+  padding: "14px 16px",
+  borderRadius: "18px",
+  backgroundColor: "rgba(255, 255, 255, 0.04)",
+  border: "1px solid rgba(148, 163, 184, 0.08)",
+};
+
+const valueCopyStyle = {
+  margin: 0,
+  color: "#f8fafc",
+  fontSize: "0.92rem",
+  fontWeight: 600,
+};
+
+const actionPanelStyle = {
+  display: "flex",
+  gap: "12px",
+  alignItems: "center",
+  padding: "16px 18px",
+  borderRadius: "20px",
+  backgroundColor: "rgba(2, 6, 23, 0.24)",
+  border: "1px solid rgba(148, 163, 184, 0.1)",
+};
+
+const logoDotStyle = {
+  width: "14px",
+  height: "14px",
+  borderRadius: "999px",
+  flexShrink: 0,
+  boxShadow: "0 0 18px currentColor",
 };
 
 export default PaymentMethodFields;

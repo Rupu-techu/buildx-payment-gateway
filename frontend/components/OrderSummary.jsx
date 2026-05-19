@@ -123,14 +123,12 @@ function OrderSummary({
           <strong>{formatCurrency(subtotal)}</strong>
         </div>
         <div style={rowStyle}>
-          <span>Platform Fee</span>
+        <span>Platform Fee</span>
           <strong>{formatCurrency(pricing.platformFee)}</strong>
         </div>
         <div style={rowStyle}>
-          <span>Delivery Fee</span>
-          <strong>
-            {pricing.deliveryFee === 0 ? "FREE" : formatCurrency(pricing.deliveryFee)}
-          </strong>
+          <span>Access</span>
+          <strong>Instant Access</strong>
         </div>
         <div style={rowStyle}>
           <span>GST ({Math.round(pricing.rules.gstRate * 100)}%)</span>
@@ -260,11 +258,7 @@ function OrderSummary({
               fontSize: "0.84rem",
             }}
           >
-            {pricing.deliveryFee === 0
-              ? `Free delivery above ${formatCurrency(pricing.rules.freeDeliveryThreshold)} unlocked`
-              : `Add more items for free delivery above ${formatCurrency(
-                  pricing.rules.freeDeliveryThreshold
-                )}`}
+            Subscription activates immediately after a successful payment.
           </p>
         </div>
       </div>

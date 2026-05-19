@@ -77,7 +77,7 @@ const paymentMethods = [
     id: "GOOGLE_PAY",
     label: "Google Pay",
     icon: "G",
-    description: "One-tap checkout",
+    description: "Continue in Google Pay",
     iconBackground: "rgba(96, 165, 250, 0.18)",
     iconColor: "#bfdbfe",
   },
@@ -85,7 +85,7 @@ const paymentMethods = [
     id: "PHONEPE",
     label: "PhonePe",
     icon: "P",
-    description: "UPI app payment",
+    description: "Fast PhonePe approval",
     iconBackground: "rgba(167, 139, 250, 0.2)",
     iconColor: "#ddd6fe",
   },
@@ -93,7 +93,7 @@ const paymentMethods = [
     id: "PAYTM",
     label: "Paytm",
     icon: "PT",
-    description: "Wallet or UPI",
+    description: "Wallet-based digital checkout",
     iconBackground: "rgba(45, 212, 191, 0.16)",
     iconColor: "#99f6e4",
   },
@@ -101,7 +101,7 @@ const paymentMethods = [
     id: "UPI",
     label: "UPI",
     icon: "U",
-    description: "Enter UPI ID",
+    description: "Enter your UPI ID",
     iconBackground: "rgba(251, 191, 36, 0.18)",
     iconColor: "#fde68a",
   },
@@ -117,7 +117,7 @@ const paymentMethods = [
     id: "NET_BANKING",
     label: "Net Banking",
     icon: "NB",
-    description: "Bank transfer flow",
+    description: "Choose your bank securely",
     iconBackground: "rgba(74, 222, 128, 0.16)",
     iconColor: "#bbf7d0",
   },
@@ -125,10 +125,10 @@ const paymentMethods = [
 
 const mockProduct = {
   id: "buildx-starter-plan",
-  title: "BuildX Starter Plan",
+  title: "BuildX Learning Pass",
   price: 499,
-  description: "Premium sandbox access for the payment gateway demo.",
-  category: "Digital Product",
+  description: "Instant access to the premium payment gateway learning experience.",
+  category: "Digital Subscription",
 };
 
 function App() {
@@ -140,10 +140,12 @@ function App() {
   const [appliedCoupon, setAppliedCoupon] = useState("");
   const [upiId, setUpiId] = useState("");
   const [cardDetails, setCardDetails] = useState({
+    name: "",
     number: "",
     expiry: "",
     cvv: "",
   });
+  const [selectedBank, setSelectedBank] = useState("SBI");
   const [isCompact, setIsCompact] = useState(() => {
     if (typeof window === "undefined") {
       return false;
@@ -273,12 +275,14 @@ function App() {
         appliedCoupon={appliedCoupon}
         upiId={upiId}
         cardDetails={cardDetails}
+        selectedBank={selectedBank}
         onBackToCheckout={returnToCheckout}
         onMethodSelect={setSelectedMethod}
         onCouponChange={setCouponCode}
         onApplyCoupon={handleApplyCoupon}
         onUpiChange={setUpiId}
         onCardChange={handleCardChange}
+        onBankChange={setSelectedBank}
         isCompact={isCompact}
       />
     );

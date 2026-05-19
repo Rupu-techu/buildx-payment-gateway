@@ -161,8 +161,8 @@ function Cart({
               fontSize: "0.9rem",
             }}
           >
-            {pricing.deliveryFee === 0 && subtotal > 0
-              ? "Free delivery unlocked"
+            {subtotal > 0
+              ? "Instant access starts after payment"
               : "Taxes calculated at checkout"}
           </p>
         </div>
@@ -183,16 +183,12 @@ function Cart({
               <strong>{formatCurrency(pricing.platformFee)}</strong>
             </div>
             <div style={priceHintRowStyle}>
-              <span>Delivery</span>
-              <strong>
-                {pricing.deliveryFee === 0
-                  ? "FREE"
-                  : formatCurrency(pricing.deliveryFee)}
-              </strong>
-            </div>
-            <div style={priceHintRowStyle}>
               <span>Estimated payable</span>
               <strong>{formatCurrency(pricing.total)}</strong>
+            </div>
+            <div style={priceHintRowStyle}>
+              <span>Access</span>
+              <strong>Instant</strong>
             </div>
           </div>
         ) : null}

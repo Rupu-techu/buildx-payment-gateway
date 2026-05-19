@@ -1,6 +1,4 @@
 const GST_RATE = 0.18;
-const FREE_DELIVERY_THRESHOLD = 750;
-const DEFAULT_DELIVERY_FEE = 59;
 const LOW_ORDER_PLATFORM_FEE = 12;
 const STANDARD_PLATFORM_FEE = 29;
 const PREMIUM_ORDER_PLATFORM_FEE = 39;
@@ -89,9 +87,6 @@ export function calculatePricing({ cartItems, couponCode }) {
     0
   );
 
-  const deliveryFee =
-    subtotal === 0 ? 0 : subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DEFAULT_DELIVERY_FEE;
-
   // The fee tiers keep the demo feeling closer to a marketplace checkout
   // while staying readable for beginners.
   const platformFee =
@@ -108,21 +103,15 @@ export function calculatePricing({ cartItems, couponCode }) {
   const couponResult = resolveCoupon(couponCode, subtotal);
   const taxableAmount = Math.max(subtotal + platformFee - couponResult.discount, 0);
   const gst = Math.round(taxableAmount * GST_RATE);
-  const total = Math.max(
-    subtotal + platformFee + deliveryFee + gst - couponResult.discount,
-    0
-  );
-  const deliverySavings =
-    subtotal >= FREE_DELIVERY_THRESHOLD && subtotal > 0 ? DEFAULT_DELIVERY_FEE : 0;
+  const total = Math.max(subtotal + platformFee + gst - couponResult.discount, 0);
   const platformSavings =
     subtotal >= PLATFORM_FEE_WAIVER_THRESHOLD ? PREMIUM_ORDER_PLATFORM_FEE : 0;
-  const totalSaved = couponResult.discount + deliverySavings + platformSavings;
+  const totalSaved = couponResult.discount + platformSavings;
 
   return {
     subtotal,
     itemCount,
     platformFee,
-    deliveryFee,
     gst,
     discount: couponResult.discount,
     total,
@@ -133,8 +122,6 @@ export function calculatePricing({ cartItems, couponCode }) {
     couponMeta: couponResult.coupon,
     rules: {
       gstRate: GST_RATE,
-      freeDeliveryThreshold: FREE_DELIVERY_THRESHOLD,
-      deliveryFeeBase: DEFAULT_DELIVERY_FEE,
       platformFeeWaiverThreshold: PLATFORM_FEE_WAIVER_THRESHOLD,
     },
   };

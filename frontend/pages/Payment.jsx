@@ -41,12 +41,14 @@ function Payment({
   appliedCoupon,
   upiId,
   cardDetails,
+  selectedBank,
   onBackToCheckout,
   onMethodSelect,
   onCouponChange,
   onApplyCoupon,
   onUpiChange,
   onCardChange,
+  onBankChange,
   isCompact = false,
 }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -77,10 +79,15 @@ function Payment({
 
     if (selectedMethod === "CARD") {
       return (
+        cardDetails.name.trim().length > 0 &&
         cardDetails.number.trim().length > 0 &&
         cardDetails.expiry.trim().length > 0 &&
         cardDetails.cvv.trim().length > 0
       );
+    }
+
+    if (selectedMethod === "NET_BANKING") {
+      return selectedBank.trim().length > 0;
     }
 
     return true;
@@ -93,7 +100,9 @@ function Payment({
         message:
           selectedMethod === "UPI"
             ? "Enter a mock UPI ID before continuing"
-            : "Complete the mock card fields before continuing",
+            : selectedMethod === "CARD"
+              ? "Complete the mock card fields before continuing"
+              : "Choose a bank before continuing",
         payment: null,
       });
       return;
@@ -108,7 +117,10 @@ function Payment({
 
     try {
       const response = await simulatePayment({
-        method: getMethodLabel(),
+        method:
+          selectedMethod === "NET_BANKING"
+            ? `${getMethodLabel()} - ${selectedBank}`
+            : getMethodLabel(),
       });
       const nextStatus = statusContent[response.status] || statusContent.PENDING;
 
@@ -211,8 +223,10 @@ function Payment({
                 selectedMethod={selectedMethod}
                 upiId={upiId}
                 cardDetails={cardDetails}
+                selectedBank={selectedBank}
                 onUpiChange={onUpiChange}
                 onCardChange={onCardChange}
+                onBankChange={onBankChange}
               />
             </div>
 
