@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
+import Loader from "../components/Loader.jsx";
 import PaymentButton from "../components/PaymentButton.jsx";
 import PaymentStatus from "../components/PaymentStatus.jsx";
+import ToastMessage from "../components/ToastMessage.jsx";
 import {
   createOrder,
   fetchPaymentStatus,
@@ -14,7 +16,26 @@ const mockScenarios = [
   { value: "PENDING", label: "Pending payment" },
 ];
 
-function Checkout() {
+const resultContentMap = {
+  SUCCESS: {
+    variant: "success",
+    title: "Mock payment completed",
+    message: "The transaction was marked successful and saved in mock history.",
+  },
+  FAILED: {
+    variant: "error",
+    title: "Mock payment failed",
+    message: "The transaction was marked failed and can be retried safely.",
+  },
+  PENDING: {
+    variant: "pending",
+    title: "Mock payment is still pending",
+    message:
+      "The transaction is still waiting for a final status. You can retry the flow any time.",
+  },
+};
+
+function Checkout({ onPaymentComplete }) {
   const [selectedScenario, setSelectedScenario] = useState("SUCCESS");
   const [isLoading, setIsLoading] = useState(false);
   const [statusVariant, setStatusVariant] = useState("idle");
@@ -23,53 +44,16 @@ function Checkout() {
   );
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [mockAmount, setMockAmount] = useState("499.99");
-
-  useEffect(() => {
-    if (statusVariant !== "pending" || !paymentDetails?.payment_id) {
-      return undefined;
-    }
-
-    // When the payment is pending, we wait briefly and then check the mock
-    // status endpoint so the UI can demonstrate a follow-up payment update.
-    const timeoutId = window.setTimeout(async () => {
-      try {
-        setStatusMessage("Payment is still pending. Checking latest status...");
-
-        const statusResponse = await fetchPaymentStatus(paymentDetails.payment_id);
-        const latestDetails = {
-          ...paymentDetails,
-          ...statusResponse.data,
-        };
-
-        setPaymentDetails(latestDetails);
-
-        if (latestDetails.status === "SUCCESS") {
-          setStatusVariant("success");
-          setStatusMessage("Pending payment moved to success.");
-        } else if (latestDetails.status === "FAILED") {
-          setStatusVariant("error");
-          setStatusMessage("Pending payment moved to failed.");
-        } else {
-          setStatusMessage(
-            "Payment is still pending. You can trigger another test run anytime."
-          );
-        }
-      } catch (error) {
-        setStatusVariant("error");
-        setStatusMessage(
-          error.message || "Could not fetch the latest payment status."
-        );
-      }
-    }, 1800);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [paymentDetails, statusVariant]);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastVariant, setToastVariant] = useState("info");
 
   async function handlePayment() {
     setIsLoading(true);
     setStatusVariant("loading");
     setStatusMessage("Creating mock order and starting payment request...");
     setPaymentDetails(null);
+    setToastVariant("info");
+    setToastMessage("Starting a new mock payment attempt...");
 
     try {
       const orderResponse = await createOrder();
@@ -77,34 +61,70 @@ function Checkout() {
 
       setMockAmount(Number(createdOrder.amount).toFixed(2));
       setStatusMessage("Order created. Verifying mock payment result...");
+      setToastMessage(orderResponse.message);
 
-      // We pass the selected scenario to the backend so we can test
-      // success, failure, and pending states on demand.
-      const verificationResponse = await verifyPayment(selectedScenario);
-      const verificationDetails = {
+      // The frontend sends the chosen scenario to the mock backend so we can
+      // test different business outcomes without integrating a real gateway yet.
+      let verificationResponse = await verifyPayment({
+        paymentId: createdOrder.payment_id,
+        status: selectedScenario,
+      });
+      let verificationDetails = {
         ...createdOrder,
         ...verificationResponse.data,
       };
 
       setPaymentDetails(verificationDetails);
 
-      if (verificationDetails.status === "SUCCESS") {
-        setStatusVariant("success");
-        setStatusMessage("Payment completed successfully.");
-      } else if (verificationDetails.status === "FAILED") {
-        setStatusVariant("error");
-        setStatusMessage("Payment failed in the mock flow.");
-      } else {
+      if (verificationDetails.status === "PENDING") {
         setStatusVariant("pending");
         setStatusMessage(
           "Payment is pending. We will check the latest status shortly."
         );
+        setToastVariant("warning");
+        setToastMessage("The payment is pending. Checking one more time...");
+
+        // A pending payment usually needs one more backend lookup before the
+        // final transaction result is presented to the user.
+        await new Promise((resolve) => window.setTimeout(resolve, 1800));
+
+        const statusResponse = await fetchPaymentStatus(verificationDetails.payment_id);
+        verificationDetails = {
+          ...verificationDetails,
+          ...statusResponse.data,
+        };
+
+        verificationResponse = statusResponse;
+        setPaymentDetails(verificationDetails);
       }
+
+      const resultContent =
+        resultContentMap[verificationDetails.status] || resultContentMap.PENDING;
+
+      setStatusVariant(resultContent.variant);
+      setStatusMessage(resultContent.message);
+      setToastVariant(
+        resultContent.variant === "pending"
+          ? "warning"
+          : resultContent.variant === "error"
+            ? "error"
+            : "success"
+      );
+      setToastMessage(verificationResponse.message);
+
+      onPaymentComplete({
+        ...resultContent,
+        apiMessage: verificationResponse.message,
+        paymentDetails: verificationDetails,
+      });
     } catch (error) {
+      setToastVariant("error");
+      setToastMessage(error.message || "Something went wrong during payment.");
       setStatusVariant("error");
       setStatusMessage(
         error.message || "Something went wrong while processing payment."
       );
+      setPaymentDetails(null);
     } finally {
       setIsLoading(false);
     }
@@ -152,6 +172,10 @@ function Checkout() {
           This screen uses the mock backend only. It is safe for frontend testing
           and future Razorpay integration work.
         </p>
+
+        <div style={{ marginBottom: "1rem" }}>
+          <ToastMessage message={toastMessage} variant={toastVariant} />
+        </div>
 
         <div
           style={{
@@ -210,7 +234,9 @@ function Checkout() {
           ))}
         </select>
 
-        <PaymentButton isLoading={isLoading} onClick={handlePayment} />
+        <PaymentButton isLoading={isLoading} onClick={handlePayment}>
+          {isLoading ? <Loader label="Processing payment..." size="small" /> : "Pay Now"}
+        </PaymentButton>
 
         <div style={{ marginTop: "1rem" }}>
           <PaymentStatus
@@ -219,6 +245,20 @@ function Checkout() {
             paymentDetails={paymentDetails}
           />
         </div>
+
+        {statusVariant === "loading" ? (
+          <div
+            style={{
+              marginTop: "1rem",
+              padding: "0.9rem 1rem",
+              borderRadius: "0.9rem",
+              backgroundColor: "#f8fafc",
+              border: "1px dashed #cbd5e1",
+            }}
+          >
+            <Loader label="Contacting the mock payment backend..." />
+          </div>
+        ) : null}
       </section>
     </main>
   );

@@ -1,4 +1,4 @@
-function PaymentButton({ isLoading, onClick }) {
+function PaymentButton({ isLoading, onClick, children = "Pay Now" }) {
   return (
     <button
       type="button"
@@ -17,7 +17,7 @@ function PaymentButton({ isLoading, onClick }) {
         transition: "background-color 0.2s ease",
       }}
     >
-      {isLoading ? "Processing Payment..." : "Pay Now"}
+      {children}
     </button>
   );
 }
