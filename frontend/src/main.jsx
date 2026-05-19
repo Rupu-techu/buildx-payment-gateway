@@ -1,4 +1,10 @@
-// React application entry point placeholder.
-// App mounting will be added when the frontend bootstrap step begins.
+import React from "react";
+import ReactDOM from "react-dom/client";
 
-export {};
+import App from "./App.jsx";
+
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);

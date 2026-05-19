@@ -1,12 +1,7 @@
-// Root application component placeholder for the Payment Gateway frontend.
+import Checkout from "../pages/Checkout.jsx";
 
 function App() {
-  return (
-    <div>
-      <h1>Payment Gateway Frontend</h1>
-      <p>Frontend architecture placeholder. Feature implementation will be added later.</p>
-    </div>
-  );
+  return <Checkout />;
 }
 
 export default App;
