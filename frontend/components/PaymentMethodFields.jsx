@@ -3,6 +3,7 @@ function PaymentMethodFields({
   upiId,
   cardDetails,
   selectedBank,
+  bankOptions = [],
   validationErrors = {},
   onUpiChange,
   onCardChange,
@@ -19,8 +20,8 @@ function PaymentMethodFields({
             accent: "#60a5fa",
             panel: "linear-gradient(135deg, rgba(37, 99, 235, 0.18), rgba(15, 23, 42, 0.58))",
             message:
-              "You will continue into a fast app-style approval flow and unlock access as soon as payment succeeds.",
-            action: "Open Google Pay flow",
+              "Open a desktop payment modal, scan the QR using Google Pay on mobile, and return here while verification completes.",
+            action: "Open Google Pay QR modal",
           }
         : {
             title: "Continue with PhonePe",
@@ -28,8 +29,8 @@ function PaymentMethodFields({
             accent: "#c084fc",
             panel: "linear-gradient(135deg, rgba(126, 34, 206, 0.2), rgba(15, 23, 42, 0.58))",
             message:
-              "This mock step simulates direct PhonePe approval for a smooth mobile-first digital checkout.",
-            action: "Open PhonePe flow",
+              "A realistic desktop QR handoff lets you scan with PhonePe on mobile before the payment is verified here.",
+            action: "Open PhonePe QR modal",
           };
 
     return (
@@ -55,7 +56,7 @@ function PaymentMethodFields({
         <div style={infoGridStyle}>
           <article style={infoCardStyle}>
             <p style={fieldLabelStyle}>Experience</p>
-            <p style={valueCopyStyle}>Secure in-app confirmation</p>
+            <p style={valueCopyStyle}>Desktop QR to mobile approval</p>
           </article>
           <article style={infoCardStyle}>
             <p style={fieldLabelStyle}>Activation</p>
@@ -214,10 +215,12 @@ function PaymentMethodFields({
             style={inputStyle(validationErrors.bank)}
             disabled={disabled}
           >
-            <option value="SBI">SBI</option>
-            <option value="HDFC">HDFC</option>
-            <option value="ICICI">ICICI</option>
-            <option value="Axis Bank">Axis Bank</option>
+            <option value="">Select your bank</option>
+            {bankOptions.map((bank) => (
+              <option key={bank} value={bank}>
+                {bank}
+              </option>
+            ))}
           </select>
         </label>
 
@@ -226,8 +229,8 @@ function PaymentMethodFields({
         ) : null}
 
         <p style={supportCopyStyle}>
-          You will be redirected to your bank's secure login page and brought back with
-          instant access once the payment succeeds.
+          Choose from popular Indian banks to simulate a more realistic redirection
+          flow before returning with access activation.
         </p>
       </section>
     );
