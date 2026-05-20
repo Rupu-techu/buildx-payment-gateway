@@ -134,6 +134,21 @@ const paymentMethods = [
   },
 ];
 
+const bankOptions = [
+  "State Bank of India",
+  "HDFC Bank",
+  "ICICI Bank",
+  "Axis Bank",
+  "Kotak Mahindra Bank",
+  "Punjab National Bank",
+  "Bank of Baroda",
+  "Canara Bank",
+  "IndusInd Bank",
+  "IDFC FIRST Bank",
+  "Union Bank of India",
+  "Yes Bank",
+];
+
 const mockProduct = {
   id: "buildx-starter-plan",
   title: "BuildX Learning Pass",
@@ -157,7 +172,7 @@ function App() {
     expiry: "",
     cvv: "",
   });
-  const [selectedBank, setSelectedBank] = useState("SBI");
+  const [selectedBank, setSelectedBank] = useState("");
   const [successfulPayment, setSuccessfulPayment] = useState(null);
   const [toasts, setToasts] = useState([]);
   const [isCompact, setIsCompact] = useState(() => {
@@ -423,10 +438,11 @@ function App() {
           selectedMethod={selectedMethod}
           couponCode={couponCode}
           appliedCoupon={appliedCoupon}
-          upiId={upiId}
-          cardDetails={cardDetails}
-          selectedBank={selectedBank}
-          onBackToCheckout={returnToCheckout}
+        upiId={upiId}
+        cardDetails={cardDetails}
+        selectedBank={selectedBank}
+        bankOptions={bankOptions}
+        onBackToCheckout={returnToCheckout}
           onMethodSelect={setSelectedMethod}
           onCouponChange={setCouponCode}
           onApplyCoupon={handleApplyCoupon}

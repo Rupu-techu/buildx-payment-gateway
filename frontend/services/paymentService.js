@@ -8,11 +8,15 @@ export async function simulatePayment(paymentContext = {}) {
   // This timeout simulates the wait time of a real API request so the
   // frontend can show loading and result states before real integration.
   await new Promise((resolve) => {
-    window.setTimeout(resolve, 1400);
+    window.setTimeout(resolve, paymentContext.delayMs ?? 1400);
   });
 
+  const availableStatuses =
+    paymentContext.allowedStatuses?.length > 0
+      ? paymentContext.allowedStatuses
+      : mockStatuses;
   const randomStatus =
-    mockStatuses[Math.floor(Math.random() * mockStatuses.length)];
+    availableStatuses[Math.floor(Math.random() * availableStatuses.length)];
 
   return {
     success: randomStatus === "SUCCESS",

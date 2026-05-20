@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import CheckoutStepper from "../components/CheckoutStepper.jsx";
+import DesktopWalletModal from "../components/DesktopWalletModal.jsx";
 import Loader from "../components/Loader.jsx";
 import OrderSummary from "../components/OrderSummary.jsx";
 import PaymentButton from "../components/PaymentButton.jsx";
@@ -46,6 +47,7 @@ function Payment({
   upiId,
   cardDetails,
   selectedBank,
+  bankOptions,
   onBackToCheckout,
   onMethodSelect,
   onCouponChange,
@@ -62,8 +64,13 @@ function Payment({
   const [isLoading, setIsLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(initialStatus);
   const [validationErrors, setValidationErrors] = useState({});
+  const [walletModalStage, setWalletModalStage] = useState("scan");
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const primaryItem = cartItems[0];
   const itemCount = cartItems.reduce((count, item) => count + item.quantity, 0);
+  const selectedMethodDetails = paymentMethods.find(
+    (method) => method.id === selectedMethod
+  );
 
   if (cartItems.length === 0) {
     return (
@@ -96,9 +103,25 @@ function Payment({
 
   function getMethodLabel() {
     return (
-      paymentMethods.find((method) => method.id === selectedMethod)?.label ||
+      selectedMethodDetails?.label ||
       "Payment Method"
     );
+  }
+
+  function requiresWalletModal() {
+    return selectedMethod === "GOOGLE_PAY" || selectedMethod === "PHONEPE";
+  }
+
+  function getResolvedMethodLabel() {
+    return selectedMethod === "NET_BANKING"
+      ? `${getMethodLabel()} - ${selectedBank}`
+      : getMethodLabel();
+  }
+
+  function wait(ms) {
+    return new Promise((resolve) => {
+      window.setTimeout(resolve, ms);
+    });
   }
 
   function updateFieldError(fieldKey, nextState) {
@@ -121,16 +144,7 @@ function Payment({
     });
   }
 
-  async function handleMockPayment() {
-    if (cartItems.length === 0) {
-      onNotify?.({
-        variant: "warning",
-        title: "Cart is empty",
-        message: "Add an item before trying to complete payment.",
-      });
-      return;
-    }
-
+  function validateBeforePayment() {
     const validation = validatePaymentDetails({
       selectedMethod,
       upiId,
@@ -150,23 +164,65 @@ function Payment({
         title: "Check your payment details",
         message: "Fix the highlighted fields and try again.",
       });
-      return;
+      return false;
     }
 
     setValidationErrors({});
+    return true;
+  }
+
+  async function finalizeSuccessfulPayment(response) {
+    setPaymentStatus({
+      variant: "success",
+      message: `Payment received via ${getMethodLabel()}. Access Activated.`,
+      payment: response,
+    });
+    await wait(900);
+    onNotify?.({
+      variant: "success",
+      title: "Payment successful",
+      message: "Payment received and access is ready to unlock.",
+    });
+    onPaymentSuccess({
+      transactionId: response.paymentId,
+      method: getResolvedMethodLabel(),
+      amount: formatCurrency(pricing.total),
+      orderId,
+    });
+  }
+
+  async function runPaymentFlow({ fromWallet = false } = {}) {
     setIsLoading(true);
     setPaymentStatus({
       variant: "loading",
-      message: `Authorizing ${getMethodLabel()} payment`,
+      message: fromWallet
+        ? `Waiting for ${getMethodLabel()} confirmation`
+        : `Processing ${getMethodLabel()} payment`,
       payment: null,
     });
 
     try {
+      if (!fromWallet) {
+        await wait(700);
+        setPaymentStatus({
+          variant: "loading",
+          message: "Payment is being processed securely",
+          payment: null,
+        });
+      }
+
+      await wait(700);
+      setPaymentStatus({
+        variant: "loading",
+        message: "Verifying payment and activating access",
+        payment: null,
+      });
+
       const response = await simulatePayment({
-        method:
-          selectedMethod === "NET_BANKING"
-            ? `${getMethodLabel()} - ${selectedBank}`
-            : getMethodLabel(),
+        method: getResolvedMethodLabel(),
+        allowedStatuses: fromWallet
+          ? ["SUCCESS", "FAILED", "PENDING"]
+          : undefined,
       });
       const nextStatus = statusContent[response.status] || statusContent.PENDING;
 
@@ -177,12 +233,18 @@ function Payment({
       });
 
       if (response.status === "FAILED") {
+        if (fromWallet) {
+          setWalletModalStage("failed");
+        }
         onNotify?.({
           variant: "error",
           title: "Payment failed",
           message: `Your ${getMethodLabel()} payment was declined. Please try again.`,
         });
       } else if (response.status === "PENDING") {
+        if (fromWallet) {
+          setWalletModalStage("failed");
+        }
         onNotify?.({
           variant: "warning",
           title: "Payment pending",
@@ -191,20 +253,13 @@ function Payment({
       }
 
       if (response.status === "SUCCESS") {
-        onNotify?.({
-          variant: "success",
-          title: "Payment successful",
-          message: "Payment received and access is ready to unlock.",
-        });
-        onPaymentSuccess({
-          transactionId: response.paymentId,
-          method:
-            selectedMethod === "NET_BANKING"
-              ? `${getMethodLabel()} - ${selectedBank}`
-              : getMethodLabel(),
-          amount: formatCurrency(pricing.total),
-          orderId,
-        });
+        if (fromWallet) {
+          setWalletModalStage("success");
+          await wait(850);
+          setIsWalletModalOpen(false);
+        }
+
+        await finalizeSuccessfulPayment(response);
       }
     } catch (error) {
       setPaymentStatus({
@@ -212,6 +267,9 @@ function Payment({
         message: error.message || "Payment request failed",
         payment: null,
       });
+      if (fromWallet) {
+        setWalletModalStage("failed");
+      }
       onNotify?.({
         variant: "error",
         title: "Request failed",
@@ -222,12 +280,60 @@ function Payment({
     }
   }
 
+  async function handleMockPayment() {
+    if (cartItems.length === 0) {
+      onNotify?.({
+        variant: "warning",
+        title: "Cart is empty",
+        message: "Add an item before trying to complete payment.",
+      });
+      return;
+    }
+
+    if (!validateBeforePayment()) {
+      return;
+    }
+
+    if (requiresWalletModal()) {
+      setWalletModalStage("scan");
+      setIsWalletModalOpen(true);
+      setPaymentStatus({
+        variant: "idle",
+        message: `Open the ${getMethodLabel()} QR modal and confirm on your phone`,
+        payment: null,
+      });
+      return;
+    }
+
+    await runPaymentFlow();
+  }
+
   function handleRetryPayment() {
     setPaymentStatus({
       variant: "idle",
       message: "Ready to try payment again",
       payment: null,
     });
+  }
+
+  async function handleWalletConfirm() {
+    setWalletModalStage("processing");
+    await wait(1200);
+    setWalletModalStage("verifying");
+    await runPaymentFlow({ fromWallet: true });
+  }
+
+  function handleWalletClose() {
+    if (isLoading) {
+      return;
+    }
+
+    setIsWalletModalOpen(false);
+    setWalletModalStage("scan");
+  }
+
+  function handleWalletRetry() {
+    setWalletModalStage("scan");
   }
 
   function handleUpiInputChange(value) {
@@ -342,6 +448,7 @@ function Payment({
                 upiId={upiId}
                 cardDetails={cardDetails}
                 selectedBank={selectedBank}
+                bankOptions={bankOptions}
                 validationErrors={validationErrors}
                 onUpiChange={handleUpiInputChange}
                 onCardChange={handleCardInputChange}
@@ -375,7 +482,11 @@ function Payment({
 
               <div style={paymentStyles.buttonWrap}>
                 <PaymentButton
-                  label={`Pay with ${getMethodLabel()}`}
+                  label={
+                    requiresWalletModal()
+                      ? `Open ${getMethodLabel()} QR`
+                      : `Pay with ${getMethodLabel()}`
+                  }
                   onClick={handleMockPayment}
                   disabled={cartItems.length === 0}
                   loading={isLoading}
@@ -385,7 +496,12 @@ function Payment({
 
                 {isLoading ? (
                   <div style={paymentStyles.loaderWrap}>
-                    <Loader label="Processing payment" size="small" />
+                    <Loader
+                      label={
+                        paymentStatus.message || "Processing and verifying payment"
+                      }
+                      size="small"
+                    />
                   </div>
                 ) : null}
               </div>
@@ -393,6 +509,17 @@ function Payment({
           </div>
         </article>
       </section>
+
+      <DesktopWalletModal
+        open={isWalletModalOpen}
+        methodLabel={getMethodLabel()}
+        amount={formatCurrency(pricing.total)}
+        orderId={orderId}
+        stage={walletModalStage}
+        onClose={handleWalletClose}
+        onConfirm={handleWalletConfirm}
+        onRetry={handleWalletRetry}
+      />
     </main>
   );
 }
