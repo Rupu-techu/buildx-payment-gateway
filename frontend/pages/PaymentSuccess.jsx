@@ -1,9 +1,38 @@
+import { useRef, useState } from "react";
+
+import ReceiptDocument from "../components/ReceiptDocument.jsx";
+import { exportReceiptPdf, printReceipt } from "../utils/receipt.js";
+
 function PaymentSuccess({
   paymentDetails,
   onGoToDashboard,
   onBackToHome,
-  onDownloadReceipt,
+  receiptData,
 }) {
+  const receiptRef = useRef(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  async function handleDownloadReceipt() {
+    if (!receiptData || isDownloading) {
+      return;
+    }
+
+    try {
+      setIsDownloading(true);
+      await exportReceiptPdf(receiptRef.current, receiptData.transactionId);
+    } finally {
+      setIsDownloading(false);
+    }
+  }
+
+  function handlePrintReceipt() {
+    if (!receiptData) {
+      return;
+    }
+
+    printReceipt(receiptRef.current);
+  }
+
   return (
     <main style={successStyles.page}>
       <section style={successStyles.shell}>
@@ -113,10 +142,17 @@ function PaymentSuccess({
             </button>
             <button
               type="button"
-              onClick={onDownloadReceipt}
+              onClick={handleDownloadReceipt}
               style={successStyles.secondaryButton}
             >
-              Download Receipt
+              {isDownloading ? "Preparing PDF..." : "Download Receipt"}
+            </button>
+            <button
+              type="button"
+              onClick={handlePrintReceipt}
+              style={successStyles.secondaryButton}
+            >
+              Print Receipt
             </button>
             <button
               type="button"
@@ -126,6 +162,20 @@ function PaymentSuccess({
               Back to Home
             </button>
           </div>
+
+          <section style={successStyles.receiptSection}>
+            <div style={successStyles.receiptHeader}>
+              <div>
+                <p style={successStyles.label}>Receipt Preview</p>
+                <h2 style={successStyles.receiptTitle}>Professional PDF invoice layout</h2>
+              </div>
+              <p style={successStyles.receiptHint}>
+                Download as PDF or print from the same clean receipt view.
+              </p>
+            </div>
+
+            <ReceiptDocument receiptData={receiptData} receiptRef={receiptRef} />
+          </section>
         </article>
       </section>
     </main>
@@ -349,6 +399,31 @@ const successStyles = {
     flexWrap: "wrap",
     gap: "12px",
     justifyContent: "center",
+  },
+  receiptSection: {
+    display: "grid",
+    gap: "18px",
+  },
+  receiptHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "14px",
+    alignItems: "flex-end",
+    flexWrap: "wrap",
+  },
+  receiptTitle: {
+    margin: "8px 0 0",
+    color: "#f8fafc",
+    fontSize: "1.2rem",
+    fontWeight: 700,
+    letterSpacing: "-0.03em",
+  },
+  receiptHint: {
+    margin: 0,
+    color: "#94a3b8",
+    fontSize: "0.9rem",
+    lineHeight: 1.6,
+    maxWidth: "320px",
   },
   primaryButton: {
     minHeight: "54px",

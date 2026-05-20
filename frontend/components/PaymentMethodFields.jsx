@@ -1,16 +1,38 @@
 function PaymentMethodFields({
+  billingName,
   selectedMethod,
   upiId,
   cardDetails,
   selectedBank,
   bankOptions = [],
   validationErrors = {},
+  onBillingNameChange,
   onUpiChange,
   onCardChange,
   onBankChange,
   disabled = false,
   isCompact = false,
 }) {
+  const billingNameField = (
+    <>
+      <label style={fieldGroupStyle}>
+        <span style={fieldLabelStyle}>Billing Name</span>
+        <input
+          type="text"
+          value={billingName}
+          onChange={(event) => onBillingNameChange(event.target.value)}
+          placeholder="Aarav Sharma"
+          style={inputStyle(validationErrors.billingName)}
+          disabled={disabled}
+        />
+      </label>
+
+      {validationErrors.billingName ? (
+        <p style={errorTextStyle}>{validationErrors.billingName}</p>
+      ) : null}
+    </>
+  );
+
   if (selectedMethod === "GOOGLE_PAY" || selectedMethod === "PHONEPE") {
     const brandDetails =
       selectedMethod === "GOOGLE_PAY"
@@ -35,6 +57,8 @@ function PaymentMethodFields({
 
     return (
       <section style={{ ...panelStyle, background: brandDetails.panel }}>
+        {billingNameField}
+
         <div style={heroRowStyle}>
           <div>
             <p style={sectionLabelStyle}>Express Checkout</p>
@@ -78,6 +102,8 @@ function PaymentMethodFields({
   if (selectedMethod === "UPI") {
     return (
       <section style={panelStyle}>
+        {billingNameField}
+
         <div>
           <p style={sectionLabelStyle}>UPI Details</p>
           <h3 style={sectionTitleStyle}>Pay with UPI and activate instantly</h3>
@@ -114,6 +140,8 @@ function PaymentMethodFields({
   if (selectedMethod === "CARD") {
     return (
       <section style={panelStyle}>
+        {billingNameField}
+
         <div>
           <p style={sectionLabelStyle}>Card Details</p>
           <h3 style={sectionTitleStyle}>Enter your card information</h3>
@@ -202,6 +230,8 @@ function PaymentMethodFields({
   if (selectedMethod === "NET_BANKING") {
     return (
       <section style={panelStyle}>
+        {billingNameField}
+
         <div>
           <p style={sectionLabelStyle}>Net Banking</p>
           <h3 style={sectionTitleStyle}>Choose your bank</h3>
@@ -242,6 +272,8 @@ function PaymentMethodFields({
 
   return (
     <section style={panelStyle}>
+      {billingNameField}
+
       <div>
         <p style={sectionLabelStyle}>Payment Details</p>
         <h3 style={sectionTitleStyle}>Selected method is ready</h3>

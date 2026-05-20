@@ -44,6 +44,7 @@ function Payment({
   selectedMethod,
   couponCode,
   appliedCoupon,
+  billingName,
   upiId,
   cardDetails,
   selectedBank,
@@ -53,6 +54,7 @@ function Payment({
   onCouponChange,
   onApplyCoupon,
   onClearCoupon,
+  onBillingNameChange,
   onUpiChange,
   onCardChange,
   onBankChange,
@@ -146,6 +148,7 @@ function Payment({
 
   function validateBeforePayment() {
     const validation = validatePaymentDetails({
+      billingName,
       selectedMethod,
       upiId,
       cardDetails,
@@ -172,6 +175,8 @@ function Payment({
   }
 
   async function finalizeSuccessfulPayment(response) {
+    const paidAt = new Date().toISOString();
+
     setPaymentStatus({
       variant: "success",
       message: `Payment received via ${getMethodLabel()}. Access Activated.`,
@@ -185,9 +190,28 @@ function Payment({
     });
     onPaymentSuccess({
       transactionId: response.paymentId,
+      customerName: billingName.trim(),
       method: getResolvedMethodLabel(),
       amount: formatCurrency(pricing.total),
       orderId,
+      status: "SUCCESS",
+      currency: "INR",
+      paidAt,
+      billingSummary: {
+        items: cartItems.map((item) => ({
+          id: item.id,
+          title: item.title,
+          quantity: item.quantity,
+          amount: item.price * item.quantity,
+        })),
+        subtotal,
+        platformFee: pricing.platformFee,
+        gst: pricing.gst,
+        gstRate: pricing.rules.gstRate,
+        discount: pricing.discount,
+        discountCode: appliedCoupon,
+        finalAmount: pricing.total,
+      },
     });
   }
 
@@ -339,6 +363,7 @@ function Payment({
   function handleUpiInputChange(value) {
     onUpiChange(value);
     updateFieldError("upiId", {
+      billingName,
       selectedMethod,
       upiId: value,
       cardDetails,
@@ -354,6 +379,7 @@ function Payment({
 
     onCardChange(field, value);
     updateFieldError(field, {
+      billingName,
       selectedMethod,
       upiId,
       cardDetails: nextCardDetails,
@@ -364,10 +390,22 @@ function Payment({
   function handleBankInputChange(value) {
     onBankChange(value);
     updateFieldError("bank", {
+      billingName,
       selectedMethod,
       upiId,
       cardDetails,
       selectedBank: value,
+    });
+  }
+
+  function handleBillingNameInputChange(value) {
+    onBillingNameChange(value);
+    updateFieldError("billingName", {
+      billingName: value,
+      selectedMethod,
+      upiId,
+      cardDetails,
+      selectedBank,
     });
   }
 
@@ -444,12 +482,14 @@ function Payment({
               />
 
               <PaymentMethodFields
+                billingName={billingName}
                 selectedMethod={selectedMethod}
                 upiId={upiId}
                 cardDetails={cardDetails}
                 selectedBank={selectedBank}
                 bankOptions={bankOptions}
                 validationErrors={validationErrors}
+                onBillingNameChange={handleBillingNameInputChange}
                 onUpiChange={handleUpiInputChange}
                 onCardChange={handleCardInputChange}
                 onBankChange={handleBankInputChange}

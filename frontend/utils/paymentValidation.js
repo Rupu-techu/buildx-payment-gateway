@@ -26,12 +26,19 @@ export function sanitizeCardInput(field, value = "") {
 }
 
 export function validatePaymentDetails({
+  billingName,
   selectedMethod,
   upiId,
   cardDetails,
   selectedBank,
 }) {
   const errors = {};
+
+  if (!billingName.trim()) {
+    errors.billingName = "Billing name is required.";
+  } else if (billingName.trim().length < 3) {
+    errors.billingName = "Enter the full billing name.";
+  }
 
   if (selectedMethod === "UPI") {
     if (!upiId.trim()) {
