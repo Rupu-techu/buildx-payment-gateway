@@ -9,6 +9,8 @@ function PaymentMethodSelector({
   selectedMethod,
   onSelect,
   disabled = false,
+  compact = false,
+  mobile = false,
 }) {
   return (
     <section
@@ -22,7 +24,17 @@ function PaymentMethodSelector({
         <h3 style={sectionTitleStyle}>Choose how you want to pay</h3>
       </div>
 
-      <div style={methodGridStyle}>
+      <div
+        style={{
+          ...methodGridStyle,
+          gridTemplateColumns: mobile
+            ? "minmax(0, 1fr)"
+            : compact
+              ? "repeat(2, minmax(0, 1fr))"
+              : methodGridStyle.gridTemplateColumns,
+          gap: mobile ? "10px" : "12px",
+        }}
+      >
         {methods.map((method) => {
           const isActive = method.id === selectedMethod;
 
@@ -34,10 +46,10 @@ function PaymentMethodSelector({
               disabled={disabled}
               style={{
                 display: "grid",
-                gap: "12px",
+                gap: mobile ? "10px" : "12px",
                 textAlign: "left",
-                padding: "16px",
-                borderRadius: "20px",
+                padding: mobile ? "14px" : "16px",
+                borderRadius: mobile ? "18px" : "20px",
                 border: isActive
                   ? "1px solid rgba(96, 165, 250, 0.5)"
                   : "1px solid rgba(148, 163, 184, 0.12)",
@@ -63,9 +75,9 @@ function PaymentMethodSelector({
                 <span
                   aria-hidden="true"
                   style={{
-                    width: "42px",
-                    height: "42px",
-                    borderRadius: "14px",
+                    width: mobile ? "38px" : "42px",
+                    height: mobile ? "38px" : "42px",
+                    borderRadius: mobile ? "12px" : "14px",
                     display: "grid",
                     placeItems: "center",
                     backgroundColor: method.iconBackground,
@@ -94,7 +106,7 @@ function PaymentMethodSelector({
                 <p
                   style={{
                     margin: 0,
-                    fontSize: "0.98rem",
+                    fontSize: mobile ? "0.92rem" : "0.98rem",
                     fontWeight: 700,
                     letterSpacing: "-0.02em",
                   }}
@@ -105,7 +117,7 @@ function PaymentMethodSelector({
                   style={{
                     margin: "6px 0 0",
                     color: "#94a3b8",
-                    fontSize: "0.84rem",
+                    fontSize: mobile ? "0.8rem" : "0.84rem",
                     lineHeight: 1.5,
                   }}
                 >

@@ -269,6 +269,7 @@ function Checkout({
   onClearCoupon,
   isApplyingCoupon = false,
   isCompact = false,
+  isMobile = false,
 }) {
   const primaryItem = cartItems[0];
   const itemCount = cartItems.reduce((count, item) => count + item.quantity, 0);
@@ -298,10 +299,28 @@ function Checkout({
   return (
     <main style={checkoutStyles.page}>
       <section style={checkoutStyles.shell}>
-        <div style={checkoutStyles.glow} aria-hidden="true" />
+        <div
+          style={{
+            ...checkoutStyles.glow,
+            inset: isMobile ? "-8px" : isCompact ? "-12px" : "-18px",
+          }}
+          aria-hidden="true"
+        />
 
-        <article style={checkoutStyles.card}>
-          <div style={checkoutStyles.header}>
+        <article
+          style={{
+            ...checkoutStyles.card,
+            gap: isMobile ? "24px" : "32px",
+            padding: isMobile ? "18px" : isCompact ? "22px" : "clamp(20px, 4vw, 36px)",
+            borderRadius: isMobile ? "26px" : "36px",
+          }}
+        >
+          <div
+            style={{
+              ...checkoutStyles.header,
+              gap: isMobile ? "16px" : "24px",
+            }}
+          >
             <div style={checkoutStyles.headerLeft}>
               <button type="button" onClick={onBack} style={checkoutStyles.backButton}>
                 Back to Cart
@@ -317,7 +336,7 @@ function Checkout({
             <span style={checkoutStyles.securePill}>Secure Demo</span>
           </div>
 
-          <CheckoutStepper activeStep="checkout" compact={isCompact} />
+          <CheckoutStepper activeStep="checkout" compact={isCompact} mobile={isMobile} />
 
           <div
             style={{
@@ -325,11 +344,24 @@ function Checkout({
               gridTemplateColumns: isCompact
                 ? "minmax(0, 1fr)"
                 : "minmax(0, 1.08fr) minmax(360px, 0.92fr)",
+              gap: isMobile ? "16px" : "clamp(20px, 3vw, 28px)",
             }}
           >
-            <div style={checkoutStyles.leftColumn}>
-              <section style={checkoutStyles.productCard}>
-                <div style={checkoutStyles.productTop}>
+            <div style={{ ...checkoutStyles.leftColumn, gap: isMobile ? "16px" : "24px" }}>
+              <section
+                style={{
+                  ...checkoutStyles.productCard,
+                  padding: isMobile ? "20px" : isCompact ? "24px" : "30px",
+                  borderRadius: isMobile ? "24px" : "30px",
+                }}
+              >
+                <div
+                  style={{
+                    ...checkoutStyles.productTop,
+                    flexDirection: isMobile ? "column" : "row",
+                    gap: isMobile ? "14px" : "20px",
+                  }}
+                >
                   <div>
                     <p style={checkoutStyles.sectionLabel}>Order</p>
                     <h2 style={checkoutStyles.sectionTitle}>
@@ -341,17 +373,40 @@ function Checkout({
                   <span style={checkoutStyles.chip}>Checkout Step</span>
                 </div>
 
-                <div style={checkoutStyles.divider} />
+                <div
+                  style={{
+                    ...checkoutStyles.divider,
+                    margin: isMobile ? "20px 0" : "28px 0",
+                  }}
+                />
 
-                <div style={checkoutStyles.amountRow}>
+                <div
+                  style={{
+                    ...checkoutStyles.amountRow,
+                    flexDirection: isMobile ? "column" : "row",
+                    alignItems: isMobile ? "flex-start" : "flex-end",
+                    gap: isMobile ? "16px" : "24px",
+                  }}
+                >
                   <div>
                     <p style={checkoutStyles.amountLabel}>Estimated total</p>
-                    <p style={checkoutStyles.amountValue}>
+                    <p
+                      style={{
+                        ...checkoutStyles.amountValue,
+                        fontSize: isMobile ? "2.2rem" : "2.8rem",
+                      }}
+                    >
                       {formatCurrency(pricing.total)}
                     </p>
                   </div>
 
-                  <div style={checkoutStyles.orderWrap}>
+                  <div
+                    style={{
+                      ...checkoutStyles.orderWrap,
+                      justifyItems: isMobile ? "start" : "end",
+                      textAlign: isMobile ? "left" : "right",
+                    }}
+                  >
                     <p style={checkoutStyles.orderLabel}>Order ID</p>
                     <p style={checkoutStyles.orderValue}>{orderId}</p>
                   </div>
@@ -362,9 +417,18 @@ function Checkout({
                 methods={paymentMethods}
                 selectedMethod={selectedMethod}
                 onSelect={onMethodSelect}
+                compact={isCompact}
+                mobile={isMobile}
               />
 
-              <section style={checkoutStyles.continuationCard}>
+              <section
+                style={{
+                  ...checkoutStyles.continuationCard,
+                  gap: isMobile ? "18px" : "24px",
+                  padding: isMobile ? "20px" : isCompact ? "22px" : "28px",
+                  borderRadius: isMobile ? "24px" : "28px",
+                }}
+              >
                 <div style={checkoutStyles.continuationMeta}>
                   <p style={checkoutStyles.sectionLabel}>Payment Preview</p>
                   <h3 style={checkoutStyles.sectionTitle}>Continue with confidence</h3>
@@ -375,7 +439,14 @@ function Checkout({
                   </p>
                 </div>
 
-                <div style={checkoutStyles.methodPreview}>
+                <div
+                  style={{
+                    ...checkoutStyles.methodPreview,
+                    gap: isMobile ? "12px" : "16px",
+                    padding: isMobile ? "16px" : "20px",
+                    borderRadius: isMobile ? "18px" : "22px",
+                  }}
+                >
                   <div>
                     <p style={checkoutStyles.sectionLabel}>Selected method</p>
                     <p style={{ ...checkoutStyles.sectionTitle, margin: "8px 0 0" }}>
@@ -388,7 +459,15 @@ function Checkout({
                   </span>
                 </div>
 
-                <div style={checkoutStyles.trustGrid}>
+                <div
+                  style={{
+                    ...checkoutStyles.trustGrid,
+                    gridTemplateColumns: isMobile
+                      ? "minmax(0, 1fr)"
+                      : checkoutStyles.trustGrid.gridTemplateColumns,
+                    gap: isMobile ? "12px" : "16px",
+                  }}
+                >
                   <article style={checkoutStyles.trustCard}>
                     <p style={checkoutStyles.trustTitle}>Fast step-by-step flow</p>
                     <p style={checkoutStyles.trustBody}>
@@ -416,7 +495,7 @@ function Checkout({
               </section>
             </div>
 
-            <div style={checkoutStyles.rightColumn}>
+            <div style={{ ...checkoutStyles.rightColumn, gap: isMobile ? "16px" : "24px" }}>
               <OrderSummary
                 cartItems={cartItems}
                 subtotal={subtotal}
@@ -425,12 +504,19 @@ function Checkout({
                 appliedCoupon={appliedCoupon}
                 isApplyingCoupon={isApplyingCoupon}
                 isCompact={isCompact}
+                isMobile={isMobile}
                 onCouponChange={onCouponChange}
                 onApplyCoupon={onApplyCoupon}
                 onClearCoupon={onClearCoupon}
               />
 
-              <div style={{ display: "grid", gap: "18px", paddingTop: "4px" }}>
+              <div
+                style={{
+                  display: "grid",
+                  gap: isMobile ? "14px" : "18px",
+                  paddingTop: isMobile ? "0" : "4px",
+                }}
+              >
                 <PaymentButton
                   label="Continue to Payment"
                   onClick={onContinue}

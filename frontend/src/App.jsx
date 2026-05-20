@@ -158,6 +158,8 @@ const mockProduct = {
 };
 
 function App() {
+  const mobileBreakpoint = 640;
+  const compactBreakpoint = 960;
   const [cartItems, setCartItems] = useState([]);
   const [stage, setStage] = useState("cart");
   const [orderId, setOrderId] = useState("DEMO-001");
@@ -176,17 +178,19 @@ function App() {
   const [selectedBank, setSelectedBank] = useState("");
   const [successfulPayment, setSuccessfulPayment] = useState(null);
   const [toasts, setToasts] = useState([]);
-  const [isCompact, setIsCompact] = useState(() => {
+  const [viewportWidth, setViewportWidth] = useState(() => {
     if (typeof window === "undefined") {
-      return false;
+      return compactBreakpoint;
     }
 
-    return window.innerWidth < 900;
+    return window.innerWidth;
   });
+  const isCompact = viewportWidth < compactBreakpoint;
+  const isMobile = viewportWidth < mobileBreakpoint;
 
   useEffect(() => {
     function handleResize() {
-      setIsCompact(window.innerWidth < 900);
+      setViewportWidth(window.innerWidth);
     }
 
     handleResize();
@@ -419,6 +423,7 @@ function App() {
           isApplyingCoupon={isApplyingCoupon}
           onClearCoupon={handleClearCoupon}
           isCompact={isCompact}
+          isMobile={isMobile}
         />
       </>
     );
@@ -455,6 +460,7 @@ function App() {
           onNotify={showToast}
           isApplyingCoupon={isApplyingCoupon}
           isCompact={isCompact}
+          isMobile={isMobile}
         />
       </>
     );

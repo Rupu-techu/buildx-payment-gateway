@@ -12,6 +12,7 @@ function PaymentMethodFields({
   onBankChange,
   disabled = false,
   isCompact = false,
+  isMobile = false,
 }) {
   const billingNameField = (
     <>
@@ -56,7 +57,13 @@ function PaymentMethodFields({
           };
 
     return (
-      <section style={{ ...panelStyle, background: brandDetails.panel }}>
+      <section
+        style={{
+          ...panelStyle,
+          ...responsivePanelStyle(isMobile, isCompact),
+          background: brandDetails.panel,
+        }}
+      >
         {billingNameField}
 
         <div style={heroRowStyle}>
@@ -77,7 +84,12 @@ function PaymentMethodFields({
 
         <p style={supportCopyStyle}>{brandDetails.message}</p>
 
-        <div style={infoGridStyle}>
+        <div
+          style={{
+            ...infoGridStyle,
+            gridTemplateColumns: isMobile ? "minmax(0, 1fr)" : infoGridStyle.gridTemplateColumns,
+          }}
+        >
           <article style={infoCardStyle}>
             <p style={fieldLabelStyle}>Experience</p>
             <p style={valueCopyStyle}>Desktop QR to mobile approval</p>
@@ -88,7 +100,14 @@ function PaymentMethodFields({
           </article>
         </div>
 
-        <div style={actionPanelStyle}>
+        <div
+          style={{
+            ...actionPanelStyle,
+            flexDirection: isMobile ? "column" : "row",
+            alignItems: isMobile ? "flex-start" : "center",
+            padding: isMobile ? "14px 16px" : "16px 18px",
+          }}
+        >
           <span style={{ ...logoDotStyle, backgroundColor: brandDetails.accent }} />
           <div>
             <p style={fieldLabelStyle}>{brandDetails.label}</p>
@@ -101,7 +120,7 @@ function PaymentMethodFields({
 
   if (selectedMethod === "UPI") {
     return (
-      <section style={panelStyle}>
+      <section style={{ ...panelStyle, ...responsivePanelStyle(isMobile, isCompact) }}>
         {billingNameField}
 
         <div>
@@ -139,7 +158,7 @@ function PaymentMethodFields({
 
   if (selectedMethod === "CARD") {
     return (
-      <section style={panelStyle}>
+      <section style={{ ...panelStyle, ...responsivePanelStyle(isMobile, isCompact) }}>
         {billingNameField}
 
         <div>
@@ -229,7 +248,7 @@ function PaymentMethodFields({
 
   if (selectedMethod === "NET_BANKING") {
     return (
-      <section style={panelStyle}>
+      <section style={{ ...panelStyle, ...responsivePanelStyle(isMobile, isCompact) }}>
         {billingNameField}
 
         <div>
@@ -271,7 +290,7 @@ function PaymentMethodFields({
   };
 
   return (
-    <section style={panelStyle}>
+    <section style={{ ...panelStyle, ...responsivePanelStyle(isMobile, isCompact) }}>
       {billingNameField}
 
       <div>
@@ -298,6 +317,14 @@ const panelStyle = {
   border: "1px solid rgba(148, 163, 184, 0.12)",
   overflow: "hidden",
 };
+
+function responsivePanelStyle(isMobile, isCompact) {
+  return {
+    gap: isMobile ? "12px" : "14px",
+    padding: isMobile ? "16px" : isCompact ? "18px" : "20px",
+    borderRadius: isMobile ? "20px" : "22px",
+  };
+}
 
 const sectionLabelStyle = {
   margin: 0,

@@ -4,18 +4,22 @@ const steps = [
   { id: "payment", label: "Payment" },
 ];
 
-function CheckoutStepper({ activeStep, compact = false }) {
+function CheckoutStepper({ activeStep, compact = false, mobile = false }) {
   return (
-    <nav aria-label="Checkout progress" style={compact ? compactWrapStyle : wrapStyle}>
+    <nav
+      aria-label="Checkout progress"
+      style={mobile ? mobileWrapStyle : compact ? compactWrapStyle : wrapStyle}
+    >
       {steps.map((step, index) => {
         const isActive = step.id === activeStep;
         const isComplete = steps.findIndex((item) => item.id === activeStep) > index;
 
         return (
-          <div key={step.id} style={stepRowStyle}>
+          <div key={step.id} style={mobile ? mobileStepRowStyle : stepRowStyle}>
             <div
               style={{
                 ...stepStyle,
+                ...(mobile ? mobileStepStyle : null),
                 ...(isActive ? activeStepStyle : null),
                 ...(isComplete ? completeStepStyle : null),
               }}
@@ -44,6 +48,7 @@ function CheckoutStepper({ activeStep, compact = false }) {
                 aria-hidden="true"
                 style={{
                   ...connectorStyle,
+                  ...(mobile ? mobileConnectorStyle : null),
                   background: isComplete
                     ? "linear-gradient(90deg, rgba(96, 165, 250, 0.65), rgba(34, 211, 238, 0.52))"
                     : "linear-gradient(90deg, rgba(148, 163, 184, 0.18), rgba(148, 163, 184, 0.05))",
@@ -69,12 +74,23 @@ const compactWrapStyle = {
   gap: "14px",
 };
 
+const mobileWrapStyle = {
+  display: "grid",
+  gap: "10px",
+};
+
 const stepRowStyle = {
   display: "flex",
   alignItems: "center",
   gap: "16px",
   flex: "1 1 250px",
   minWidth: "0",
+};
+
+const mobileStepRowStyle = {
+  display: "grid",
+  gap: "10px",
+  minWidth: 0,
 };
 
 const stepStyle = {
@@ -89,6 +105,11 @@ const stepStyle = {
   background: "linear-gradient(180deg, rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.3))",
   boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.03)",
   transition: "all 180ms ease",
+};
+
+const mobileStepStyle = {
+  padding: "14px 16px",
+  borderRadius: "18px",
 };
 
 const activeStepStyle = {
@@ -145,6 +166,12 @@ const connectorStyle = {
   height: "1px",
   flex: "0 0 48px",
   borderRadius: "999px",
+};
+
+const mobileConnectorStyle = {
+  width: "1px",
+  height: "22px",
+  marginLeft: "17px",
 };
 
 export default CheckoutStepper;

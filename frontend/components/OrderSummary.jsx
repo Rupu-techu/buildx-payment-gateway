@@ -9,6 +9,7 @@ function OrderSummary({
   appliedCoupon,
   isApplyingCoupon = false,
   isCompact = false,
+  isMobile = false,
   onCouponChange,
   onApplyCoupon,
   onClearCoupon,
@@ -17,9 +18,9 @@ function OrderSummary({
     <section
       style={{
         display: "grid",
-        gap: "24px",
-        padding: "28px",
-        borderRadius: "28px",
+        gap: isMobile ? "18px" : "24px",
+        padding: isMobile ? "18px" : isCompact ? "22px" : "28px",
+        borderRadius: isMobile ? "24px" : "28px",
         background:
           "linear-gradient(180deg, rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.58))",
         border: "1px solid rgba(148, 163, 184, 0.14)",
@@ -68,17 +69,18 @@ function OrderSummary({
         </span>
       </div>
 
-      <div style={{ display: "grid", gap: "12px" }}>
+      <div style={{ display: "grid", gap: isMobile ? "10px" : "12px" }}>
         {cartItems.map((item) => (
           <div
             key={item.id}
             style={{
               display: "flex",
               justifyContent: "space-between",
-              gap: "16px",
-              alignItems: "center",
-              padding: "18px 20px",
-              borderRadius: "20px",
+              gap: "14px",
+              alignItems: isMobile ? "flex-start" : "center",
+              flexDirection: isMobile ? "column" : "row",
+              padding: isMobile ? "16px" : "18px 20px",
+              borderRadius: isMobile ? "18px" : "20px",
               backgroundColor: "rgba(255, 255, 255, 0.03)",
               border: "1px solid rgba(148, 163, 184, 0.08)",
             }}
@@ -115,9 +117,9 @@ function OrderSummary({
       <div
         style={{
           display: "grid",
-          gap: "14px",
-          padding: "20px",
-          borderRadius: "22px",
+          gap: isMobile ? "12px" : "14px",
+          padding: isMobile ? "16px" : "20px",
+          borderRadius: isMobile ? "18px" : "22px",
           backgroundColor: "rgba(2, 6, 23, 0.35)",
           border: "1px solid rgba(148, 163, 184, 0.1)",
         }}
@@ -146,13 +148,13 @@ function OrderSummary({
 
       <div
         style={{
-          padding: "20px",
-          borderRadius: "22px",
+          padding: isMobile ? "16px" : "20px",
+          borderRadius: isMobile ? "18px" : "22px",
           background:
             "linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(15, 23, 42, 0.55))",
           border: "1px solid rgba(96, 165, 250, 0.18)",
           display: "grid",
-          gap: "12px",
+          gap: isMobile ? "10px" : "12px",
         }}
       >
         <p style={labelStyle}>Coupon Code</p>
@@ -187,7 +189,7 @@ function OrderSummary({
             gridTemplateColumns: isCompact
               ? "minmax(0, 1fr)"
               : "minmax(0, 1fr) auto",
-            gap: "12px",
+            gap: isMobile ? "10px" : "12px",
           }}
         >
           <input
@@ -234,9 +236,9 @@ function OrderSummary({
       <div
         style={{
           display: "grid",
-          gap: "12px",
-          padding: "20px",
-          borderRadius: "22px",
+          gap: isMobile ? "10px" : "12px",
+          padding: isMobile ? "16px" : "20px",
+          borderRadius: isMobile ? "18px" : "22px",
           backgroundColor: "rgba(255, 255, 255, 0.03)",
           border: "1px solid rgba(148, 163, 184, 0.08)",
         }}

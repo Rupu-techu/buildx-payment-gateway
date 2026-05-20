@@ -62,6 +62,7 @@ function Payment({
   onNotify,
   isApplyingCoupon = false,
   isCompact = false,
+  isMobile = false,
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(initialStatus);
@@ -412,10 +413,28 @@ function Payment({
   return (
     <main style={paymentStyles.page}>
       <section style={paymentStyles.shell}>
-        <div style={paymentStyles.glow} aria-hidden="true" />
+        <div
+          style={{
+            ...paymentStyles.glow,
+            inset: isMobile ? "-8px" : isCompact ? "-12px" : "-18px",
+          }}
+          aria-hidden="true"
+        />
 
-        <article style={paymentStyles.card}>
-          <div style={paymentStyles.header}>
+        <article
+          style={{
+            ...paymentStyles.card,
+            gap: isMobile ? "24px" : "32px",
+            padding: isMobile ? "18px" : isCompact ? "22px" : "clamp(20px, 4vw, 36px)",
+            borderRadius: isMobile ? "26px" : "36px",
+          }}
+        >
+          <div
+            style={{
+              ...paymentStyles.header,
+              gap: isMobile ? "16px" : "24px",
+            }}
+          >
             <div style={paymentStyles.headerLeft}>
               <button
                 type="button"
@@ -435,7 +454,7 @@ function Payment({
             <span style={paymentStyles.securePill}>Secure Demo</span>
           </div>
 
-          <CheckoutStepper activeStep="payment" compact={isCompact} />
+          <CheckoutStepper activeStep="payment" compact={isCompact} mobile={isMobile} />
 
           <div
             style={{
@@ -443,11 +462,24 @@ function Payment({
               gridTemplateColumns: isCompact
                 ? "minmax(0, 1fr)"
                 : "minmax(0, 1.08fr) minmax(360px, 0.92fr)",
+              gap: isMobile ? "16px" : "clamp(20px, 3vw, 28px)",
             }}
           >
-            <div style={paymentStyles.leftColumn}>
-              <section style={paymentStyles.productCard}>
-                <div style={paymentStyles.productTop}>
+            <div style={{ ...paymentStyles.leftColumn, gap: isMobile ? "16px" : "24px" }}>
+              <section
+                style={{
+                  ...paymentStyles.productCard,
+                  padding: isMobile ? "20px" : isCompact ? "24px" : "30px",
+                  borderRadius: isMobile ? "24px" : "30px",
+                }}
+              >
+                <div
+                  style={{
+                    ...paymentStyles.productTop,
+                    flexDirection: isMobile ? "column" : "row",
+                    gap: isMobile ? "14px" : "20px",
+                  }}
+                >
                   <div>
                     <p style={paymentStyles.productLabel}>Order</p>
                     <h2 style={paymentStyles.productTitle}>
@@ -459,15 +491,40 @@ function Payment({
                   <span style={paymentStyles.chip}>Payment Step</span>
                 </div>
 
-                <div style={paymentStyles.divider} />
+                <div
+                  style={{
+                    ...paymentStyles.divider,
+                    margin: isMobile ? "20px 0" : "28px 0",
+                  }}
+                />
 
-                <div style={paymentStyles.amountRow}>
+                <div
+                  style={{
+                    ...paymentStyles.amountRow,
+                    flexDirection: isMobile ? "column" : "row",
+                    alignItems: isMobile ? "flex-start" : "flex-end",
+                    gap: isMobile ? "16px" : "24px",
+                  }}
+                >
                   <div>
                     <p style={paymentStyles.amountLabel}>Payable now</p>
-                    <p style={paymentStyles.amountValue}>{formatCurrency(pricing.total)}</p>
+                    <p
+                      style={{
+                        ...paymentStyles.amountValue,
+                        fontSize: isMobile ? "2.2rem" : "2.8rem",
+                      }}
+                    >
+                      {formatCurrency(pricing.total)}
+                    </p>
                   </div>
 
-                  <div style={paymentStyles.orderWrap}>
+                  <div
+                    style={{
+                      ...paymentStyles.orderWrap,
+                      justifyItems: isMobile ? "start" : "end",
+                      textAlign: isMobile ? "left" : "right",
+                    }}
+                  >
                     <p style={paymentStyles.orderLabel}>Order ID</p>
                     <p style={paymentStyles.orderValue}>{orderId}</p>
                   </div>
@@ -479,6 +536,8 @@ function Payment({
                 selectedMethod={selectedMethod}
                 onSelect={handleMethodSelect}
                 disabled={isLoading}
+                compact={isCompact}
+                mobile={isMobile}
               />
 
               <PaymentMethodFields
@@ -495,10 +554,11 @@ function Payment({
                 onBankChange={handleBankInputChange}
                 disabled={isLoading}
                 isCompact={isCompact}
+                isMobile={isMobile}
               />
             </div>
 
-            <div style={paymentStyles.rightColumn}>
+            <div style={{ ...paymentStyles.rightColumn, gap: isMobile ? "16px" : "24px" }}>
               <OrderSummary
                 cartItems={cartItems}
                 subtotal={subtotal}
@@ -507,6 +567,7 @@ function Payment({
                 appliedCoupon={appliedCoupon}
                 isApplyingCoupon={isApplyingCoupon}
                 isCompact={isCompact}
+                isMobile={isMobile}
                 onCouponChange={onCouponChange}
                 onApplyCoupon={onApplyCoupon}
                 onClearCoupon={onClearCoupon}
@@ -556,6 +617,8 @@ function Payment({
         amount={formatCurrency(pricing.total)}
         orderId={orderId}
         stage={walletModalStage}
+        compact={isCompact}
+        mobile={isMobile}
         onClose={handleWalletClose}
         onConfirm={handleWalletConfirm}
         onRetry={handleWalletRetry}
