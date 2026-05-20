@@ -327,7 +327,6 @@ function Payment({
       setIsLoading(false);
     }
   }
-  }
 
   async function handleMockPayment() {
     if (cartItems.length === 0) {
