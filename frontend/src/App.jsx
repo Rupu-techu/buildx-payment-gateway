@@ -158,6 +158,8 @@ const mockProduct = {
 };
 
 function App() {
+  const mobileBreakpoint = 640;
+  const compactBreakpoint = 960;
   const [cartItems, setCartItems] = useState([]);
   const [stage, setStage] = useState("cart");
   const [orderId, setOrderId] = useState("DEMO-001");
@@ -166,6 +168,7 @@ function App() {
   const [submittedCouponCode, setSubmittedCouponCode] = useState("");
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [upiId, setUpiId] = useState("");
+  const [billingName, setBillingName] = useState("");
   const [cardDetails, setCardDetails] = useState({
     name: "",
     number: "",
@@ -175,17 +178,19 @@ function App() {
   const [selectedBank, setSelectedBank] = useState("");
   const [successfulPayment, setSuccessfulPayment] = useState(null);
   const [toasts, setToasts] = useState([]);
-  const [isCompact, setIsCompact] = useState(() => {
+  const [viewportWidth, setViewportWidth] = useState(() => {
     if (typeof window === "undefined") {
-      return false;
+      return compactBreakpoint;
     }
 
-    return window.innerWidth < 900;
+    return window.innerWidth;
   });
+  const isCompact = viewportWidth < compactBreakpoint;
+  const isMobile = viewportWidth < mobileBreakpoint;
 
   useEffect(() => {
     function handleResize() {
-      setIsCompact(window.innerWidth < 900);
+      setViewportWidth(window.innerWidth);
     }
 
     handleResize();
@@ -306,31 +311,6 @@ function App() {
     setStage("cart");
   }
 
-  function downloadReceipt() {
-    if (!successfulPayment) {
-      return;
-    }
-
-    const receiptBody = [
-      "BuildX Payments Receipt",
-      "------------------------",
-      `Transaction ID: ${successfulPayment.transactionId}`,
-      `Order ID: ${successfulPayment.orderId}`,
-      `Payment Method: ${successfulPayment.method}`,
-      `Paid Amount: ${successfulPayment.amount}`,
-      "Status: Successful",
-      "Access: Unlocked",
-    ].join("\n");
-
-    const receiptBlob = new Blob([receiptBody], { type: "text/plain;charset=utf-8" });
-    const receiptUrl = window.URL.createObjectURL(receiptBlob);
-    const link = document.createElement("a");
-    link.href = receiptUrl;
-    link.download = `buildx-receipt-${successfulPayment.transactionId}.txt`;
-    link.click();
-    window.URL.revokeObjectURL(receiptUrl);
-  }
-
   async function handleApplyCoupon() {
     if (isApplyingCoupon) {
       return;
@@ -399,6 +379,29 @@ function App() {
     setUpiId(sanitizeUpiId(value));
   }
 
+  function buildReceiptData() {
+    if (!successfulPayment) {
+      return null;
+    }
+
+    return {
+      brand: {
+        title: "BuildX Payments",
+        subtitle: "Digital Payment Receipt",
+      },
+      customerName: successfulPayment.customerName,
+      transactionId: successfulPayment.transactionId,
+      orderId: successfulPayment.orderId,
+      paymentMethod: successfulPayment.method,
+      status: successfulPayment.status,
+      paidAt: successfulPayment.paidAt,
+      billingSummary: successfulPayment.billingSummary,
+      currency: successfulPayment.currency,
+      notes:
+        "This is a system-generated receipt for your BuildX digital purchase.",
+    };
+  }
+
   if (stage === "checkout") {
     return (
       <>
@@ -420,6 +423,7 @@ function App() {
           isApplyingCoupon={isApplyingCoupon}
           onClearCoupon={handleClearCoupon}
           isCompact={isCompact}
+          isMobile={isMobile}
         />
       </>
     );
@@ -438,15 +442,17 @@ function App() {
           selectedMethod={selectedMethod}
           couponCode={couponCode}
           appliedCoupon={appliedCoupon}
-        upiId={upiId}
-        cardDetails={cardDetails}
-        selectedBank={selectedBank}
-        bankOptions={bankOptions}
-        onBackToCheckout={returnToCheckout}
+          billingName={billingName}
+          upiId={upiId}
+          cardDetails={cardDetails}
+          selectedBank={selectedBank}
+          bankOptions={bankOptions}
+          onBackToCheckout={returnToCheckout}
           onMethodSelect={setSelectedMethod}
           onCouponChange={setCouponCode}
           onApplyCoupon={handleApplyCoupon}
           onClearCoupon={handleClearCoupon}
+          onBillingNameChange={setBillingName}
           onUpiChange={handleUpiChange}
           onCardChange={handleCardChange}
           onBankChange={setSelectedBank}
@@ -454,6 +460,7 @@ function App() {
           onNotify={showToast}
           isApplyingCoupon={isApplyingCoupon}
           isCompact={isCompact}
+          isMobile={isMobile}
         />
       </>
     );
@@ -465,9 +472,9 @@ function App() {
         <ToastViewport toasts={toasts} onDismiss={dismissToast} />
         <PaymentSuccess
           paymentDetails={successfulPayment}
+          receiptData={buildReceiptData()}
           onGoToDashboard={goToDashboard}
           onBackToHome={goBackHome}
-          onDownloadReceipt={downloadReceipt}
         />
       </>
     );

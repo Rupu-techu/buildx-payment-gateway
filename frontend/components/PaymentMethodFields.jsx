@@ -1,16 +1,39 @@
 function PaymentMethodFields({
+  billingName,
   selectedMethod,
   upiId,
   cardDetails,
   selectedBank,
   bankOptions = [],
   validationErrors = {},
+  onBillingNameChange,
   onUpiChange,
   onCardChange,
   onBankChange,
   disabled = false,
   isCompact = false,
+  isMobile = false,
 }) {
+  const billingNameField = (
+    <>
+      <label style={fieldGroupStyle}>
+        <span style={fieldLabelStyle}>Billing Name</span>
+        <input
+          type="text"
+          value={billingName}
+          onChange={(event) => onBillingNameChange(event.target.value)}
+          placeholder="Aarav Sharma"
+          style={inputStyle(validationErrors.billingName)}
+          disabled={disabled}
+        />
+      </label>
+
+      {validationErrors.billingName ? (
+        <p style={errorTextStyle}>{validationErrors.billingName}</p>
+      ) : null}
+    </>
+  );
+
   if (selectedMethod === "GOOGLE_PAY" || selectedMethod === "PHONEPE") {
     const brandDetails =
       selectedMethod === "GOOGLE_PAY"
@@ -34,7 +57,15 @@ function PaymentMethodFields({
           };
 
     return (
-      <section style={{ ...panelStyle, background: brandDetails.panel }}>
+      <section
+        style={{
+          ...panelStyle,
+          ...responsivePanelStyle(isMobile, isCompact),
+          background: brandDetails.panel,
+        }}
+      >
+        {billingNameField}
+
         <div style={heroRowStyle}>
           <div>
             <p style={sectionLabelStyle}>Express Checkout</p>
@@ -51,33 +82,16 @@ function PaymentMethodFields({
           </span>
         </div>
 
-        <p style={supportCopyStyle}>{brandDetails.message}</p>
 
-        <div style={infoGridStyle}>
-          <article style={infoCardStyle}>
-            <p style={fieldLabelStyle}>Experience</p>
-            <p style={valueCopyStyle}>Desktop QR to mobile approval</p>
-          </article>
-          <article style={infoCardStyle}>
-            <p style={fieldLabelStyle}>Activation</p>
-            <p style={valueCopyStyle}>Subscription starts immediately</p>
-          </article>
-        </div>
-
-        <div style={actionPanelStyle}>
-          <span style={{ ...logoDotStyle, backgroundColor: brandDetails.accent }} />
-          <div>
-            <p style={fieldLabelStyle}>{brandDetails.label}</p>
-            <p style={valueCopyStyle}>{brandDetails.action}</p>
-          </div>
-        </div>
       </section>
     );
   }
 
   if (selectedMethod === "UPI") {
     return (
-      <section style={panelStyle}>
+      <section style={{ ...panelStyle, ...responsivePanelStyle(isMobile, isCompact) }}>
+        {billingNameField}
+
         <div>
           <p style={sectionLabelStyle}>UPI Details</p>
           <h3 style={sectionTitleStyle}>Pay with UPI and activate instantly</h3>
@@ -102,18 +116,15 @@ function PaymentMethodFields({
         {validationErrors.upiId ? (
           <p style={errorTextStyle}>{validationErrors.upiId}</p>
         ) : null}
-
-        <p style={supportCopyStyle}>
-          Enter a mock UPI ID to simulate direct approval. Your course or subscription
-          access starts right after payment.
-        </p>
       </section>
     );
   }
 
   if (selectedMethod === "CARD") {
     return (
-      <section style={panelStyle}>
+      <section style={{ ...panelStyle, ...responsivePanelStyle(isMobile, isCompact) }}>
+        {billingNameField}
+
         <div>
           <p style={sectionLabelStyle}>Card Details</p>
           <h3 style={sectionTitleStyle}>Enter your card information</h3>
@@ -190,18 +201,15 @@ function PaymentMethodFields({
             ) : null}
           </label>
         </div>
-
-        <p style={supportCopyStyle}>
-          Your payment is simulated locally, but the layout mirrors a premium digital
-          subscription checkout.
-        </p>
       </section>
     );
   }
 
   if (selectedMethod === "NET_BANKING") {
     return (
-      <section style={panelStyle}>
+      <section style={{ ...panelStyle, ...responsivePanelStyle(isMobile, isCompact) }}>
+        {billingNameField}
+
         <div>
           <p style={sectionLabelStyle}>Net Banking</p>
           <h3 style={sectionTitleStyle}>Choose your bank</h3>
@@ -227,11 +235,6 @@ function PaymentMethodFields({
         {validationErrors.bank ? (
           <p style={errorTextStyle}>{validationErrors.bank}</p>
         ) : null}
-
-        <p style={supportCopyStyle}>
-          Choose from popular Indian banks to simulate a more realistic redirection
-          flow before returning with access activation.
-        </p>
       </section>
     );
   }
@@ -241,7 +244,9 @@ function PaymentMethodFields({
   };
 
   return (
-    <section style={panelStyle}>
+    <section style={{ ...panelStyle, ...responsivePanelStyle(isMobile, isCompact) }}>
+      {billingNameField}
+
       <div>
         <p style={sectionLabelStyle}>Payment Details</p>
         <h3 style={sectionTitleStyle}>Selected method is ready</h3>
@@ -266,6 +271,14 @@ const panelStyle = {
   border: "1px solid rgba(148, 163, 184, 0.12)",
   overflow: "hidden",
 };
+
+function responsivePanelStyle(isMobile, isCompact) {
+  return {
+    gap: isMobile ? "12px" : "14px",
+    padding: isMobile ? "16px" : isCompact ? "18px" : "20px",
+    borderRadius: isMobile ? "20px" : "22px",
+  };
+}
 
 const sectionLabelStyle = {
   margin: 0,
@@ -337,46 +350,6 @@ const badgeStyle = {
   backgroundColor: "rgba(255, 255, 255, 0.05)",
   fontSize: "0.78rem",
   fontWeight: 700,
-};
-
-const infoGridStyle = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-  gap: "12px",
-};
-
-const infoCardStyle = {
-  display: "grid",
-  gap: "6px",
-  padding: "14px 16px",
-  borderRadius: "18px",
-  backgroundColor: "rgba(255, 255, 255, 0.04)",
-  border: "1px solid rgba(148, 163, 184, 0.08)",
-};
-
-const valueCopyStyle = {
-  margin: 0,
-  color: "#f8fafc",
-  fontSize: "0.92rem",
-  fontWeight: 600,
-};
-
-const actionPanelStyle = {
-  display: "flex",
-  gap: "12px",
-  alignItems: "center",
-  padding: "16px 18px",
-  borderRadius: "20px",
-  backgroundColor: "rgba(2, 6, 23, 0.24)",
-  border: "1px solid rgba(148, 163, 184, 0.1)",
-};
-
-const logoDotStyle = {
-  width: "14px",
-  height: "14px",
-  borderRadius: "999px",
-  flexShrink: 0,
-  boxShadow: "0 0 18px currentColor",
 };
 
 export default PaymentMethodFields;

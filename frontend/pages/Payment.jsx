@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import CheckoutStepper from "../components/CheckoutStepper.jsx";
 import DesktopWalletModal from "../components/DesktopWalletModal.jsx";
+import MobilePaymentModal from "../components/MobilePaymentModal.jsx";
 import Loader from "../components/Loader.jsx";
 import OrderSummary from "../components/OrderSummary.jsx";
 import PaymentButton from "../components/PaymentButton.jsx";
@@ -13,6 +14,7 @@ import { simulatePayment } from "../services/paymentService.js";
 import {
   validatePaymentDetails,
 } from "../utils/paymentValidation.js";
+import { getPaymentFlowType } from "../utils/deviceDetection.js";
 
 const statusContent = {
   SUCCESS: {
@@ -44,6 +46,7 @@ function Payment({
   selectedMethod,
   couponCode,
   appliedCoupon,
+  billingName,
   upiId,
   cardDetails,
   selectedBank,
@@ -53,6 +56,7 @@ function Payment({
   onCouponChange,
   onApplyCoupon,
   onClearCoupon,
+  onBillingNameChange,
   onUpiChange,
   onCardChange,
   onBankChange,
@@ -60,12 +64,16 @@ function Payment({
   onNotify,
   isApplyingCoupon = false,
   isCompact = false,
+  isMobile = false,
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(initialStatus);
   const [validationErrors, setValidationErrors] = useState({});
   const [walletModalStage, setWalletModalStage] = useState("scan");
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [mobilePaymentModalStage, setMobilePaymentModalStage] = useState("processing");
+  const [isMobilePaymentModalOpen, setIsMobilePaymentModalOpen] = useState(false);
+  const flowType = getPaymentFlowType();
   const primaryItem = cartItems[0];
   const itemCount = cartItems.reduce((count, item) => count + item.quantity, 0);
   const selectedMethodDetails = paymentMethods.find(
@@ -146,6 +154,7 @@ function Payment({
 
   function validateBeforePayment() {
     const validation = validatePaymentDetails({
+      billingName,
       selectedMethod,
       upiId,
       cardDetails,
@@ -172,6 +181,8 @@ function Payment({
   }
 
   async function finalizeSuccessfulPayment(response) {
+    const paidAt = new Date().toISOString();
+
     setPaymentStatus({
       variant: "success",
       message: `Payment received via ${getMethodLabel()}. Access Activated.`,
@@ -185,9 +196,28 @@ function Payment({
     });
     onPaymentSuccess({
       transactionId: response.paymentId,
+      customerName: billingName.trim(),
       method: getResolvedMethodLabel(),
       amount: formatCurrency(pricing.total),
       orderId,
+      status: "SUCCESS",
+      currency: "INR",
+      paidAt,
+      billingSummary: {
+        items: cartItems.map((item) => ({
+          id: item.id,
+          title: item.title,
+          quantity: item.quantity,
+          amount: item.price * item.quantity,
+        })),
+        subtotal,
+        platformFee: pricing.platformFee,
+        gst: pricing.gst,
+        gstRate: pricing.rules.gstRate,
+        discount: pricing.discount,
+        discountCode: appliedCoupon,
+        finalAmount: pricing.total,
+      },
     });
   }
 
@@ -234,7 +264,11 @@ function Payment({
 
       if (response.status === "FAILED") {
         if (fromWallet) {
-          setWalletModalStage("failed");
+          if (flowType === "mobile-app") {
+            setMobilePaymentModalStage("failed");
+          } else {
+            setWalletModalStage("failed");
+          }
         }
         onNotify?.({
           variant: "error",
@@ -243,7 +277,11 @@ function Payment({
         });
       } else if (response.status === "PENDING") {
         if (fromWallet) {
-          setWalletModalStage("failed");
+          if (flowType === "mobile-app") {
+            setMobilePaymentModalStage("failed");
+          } else {
+            setWalletModalStage("failed");
+          }
         }
         onNotify?.({
           variant: "warning",
@@ -254,9 +292,15 @@ function Payment({
 
       if (response.status === "SUCCESS") {
         if (fromWallet) {
-          setWalletModalStage("success");
-          await wait(850);
-          setIsWalletModalOpen(false);
+          if (flowType === "mobile-app") {
+            setMobilePaymentModalStage("success");
+            await wait(850);
+            setIsMobilePaymentModalOpen(false);
+          } else {
+            setWalletModalStage("success");
+            await wait(850);
+            setIsWalletModalOpen(false);
+          }
         }
 
         await finalizeSuccessfulPayment(response);
@@ -268,7 +312,11 @@ function Payment({
         payment: null,
       });
       if (fromWallet) {
-        setWalletModalStage("failed");
+        if (flowType === "mobile-app") {
+          setMobilePaymentModalStage("failed");
+        } else {
+          setWalletModalStage("failed");
+        }
       }
       onNotify?.({
         variant: "error",
@@ -278,6 +326,7 @@ function Payment({
     } finally {
       setIsLoading(false);
     }
+  }
   }
 
   async function handleMockPayment() {
@@ -295,13 +344,28 @@ function Payment({
     }
 
     if (requiresWalletModal()) {
-      setWalletModalStage("scan");
-      setIsWalletModalOpen(true);
-      setPaymentStatus({
-        variant: "idle",
-        message: `Open the ${getMethodLabel()} QR modal and confirm on your phone`,
-        payment: null,
-      });
+      // Use device-specific payment flow
+      if (flowType === "mobile-app") {
+        // Mobile: show direct app opening flow
+        setMobilePaymentModalStage("redirecting");
+        setIsMobilePaymentModalOpen(true);
+        setPaymentStatus({
+          variant: "idle",
+          message: `Opening ${getMethodLabel()} for payment`,
+          payment: null,
+        });
+        await wait(1500);
+        await runPaymentFlow({ fromWallet: true });
+      } else {
+        // Desktop: show QR code modal
+        setWalletModalStage("scan");
+        setIsWalletModalOpen(true);
+        setPaymentStatus({
+          variant: "idle",
+          message: `Open the ${getMethodLabel()} QR modal and confirm on your phone`,
+          payment: null,
+        });
+      }
       return;
     }
 
@@ -336,9 +400,23 @@ function Payment({
     setWalletModalStage("scan");
   }
 
+  function handleMobilePaymentClose() {
+    if (isLoading) {
+      return;
+    }
+    setIsMobilePaymentModalOpen(false);
+    setMobilePaymentModalStage("processing");
+  }
+
+  function handleMobilePaymentRetry() {
+    setMobilePaymentModalStage("redirecting");
+    handleMockPayment();
+  }
+
   function handleUpiInputChange(value) {
     onUpiChange(value);
     updateFieldError("upiId", {
+      billingName,
       selectedMethod,
       upiId: value,
       cardDetails,
@@ -354,6 +432,7 @@ function Payment({
 
     onCardChange(field, value);
     updateFieldError(field, {
+      billingName,
       selectedMethod,
       upiId,
       cardDetails: nextCardDetails,
@@ -364,6 +443,7 @@ function Payment({
   function handleBankInputChange(value) {
     onBankChange(value);
     updateFieldError("bank", {
+      billingName,
       selectedMethod,
       upiId,
       cardDetails,
@@ -371,13 +451,42 @@ function Payment({
     });
   }
 
+  function handleBillingNameInputChange(value) {
+    onBillingNameChange(value);
+    updateFieldError("billingName", {
+      billingName: value,
+      selectedMethod,
+      upiId,
+      cardDetails,
+      selectedBank,
+    });
+  }
+
   return (
     <main style={paymentStyles.page}>
       <section style={paymentStyles.shell}>
-        <div style={paymentStyles.glow} aria-hidden="true" />
+        <div
+          style={{
+            ...paymentStyles.glow,
+            inset: isMobile ? "-8px" : isCompact ? "-12px" : "-18px",
+          }}
+          aria-hidden="true"
+        />
 
-        <article style={paymentStyles.card}>
-          <div style={paymentStyles.header}>
+        <article
+          style={{
+            ...paymentStyles.card,
+            gap: isMobile ? "24px" : "32px",
+            padding: isMobile ? "18px" : isCompact ? "22px" : "clamp(20px, 4vw, 36px)",
+            borderRadius: isMobile ? "26px" : "36px",
+          }}
+        >
+          <div
+            style={{
+              ...paymentStyles.header,
+              gap: isMobile ? "16px" : "24px",
+            }}
+          >
             <div style={paymentStyles.headerLeft}>
               <button
                 type="button"
@@ -397,7 +506,7 @@ function Payment({
             <span style={paymentStyles.securePill}>Secure Demo</span>
           </div>
 
-          <CheckoutStepper activeStep="payment" compact={isCompact} />
+          <CheckoutStepper activeStep="payment" compact={isCompact} mobile={isMobile} />
 
           <div
             style={{
@@ -405,11 +514,24 @@ function Payment({
               gridTemplateColumns: isCompact
                 ? "minmax(0, 1fr)"
                 : "minmax(0, 1.08fr) minmax(360px, 0.92fr)",
+              gap: isMobile ? "16px" : "clamp(20px, 3vw, 28px)",
             }}
           >
-            <div style={paymentStyles.leftColumn}>
-              <section style={paymentStyles.productCard}>
-                <div style={paymentStyles.productTop}>
+            <div style={{ ...paymentStyles.leftColumn, gap: isMobile ? "16px" : "24px" }}>
+              <section
+                style={{
+                  ...paymentStyles.productCard,
+                  padding: isMobile ? "20px" : isCompact ? "24px" : "30px",
+                  borderRadius: isMobile ? "24px" : "30px",
+                }}
+              >
+                <div
+                  style={{
+                    ...paymentStyles.productTop,
+                    flexDirection: isMobile ? "column" : "row",
+                    gap: isMobile ? "14px" : "20px",
+                  }}
+                >
                   <div>
                     <p style={paymentStyles.productLabel}>Order</p>
                     <h2 style={paymentStyles.productTitle}>
@@ -421,15 +543,40 @@ function Payment({
                   <span style={paymentStyles.chip}>Payment Step</span>
                 </div>
 
-                <div style={paymentStyles.divider} />
+                <div
+                  style={{
+                    ...paymentStyles.divider,
+                    margin: isMobile ? "20px 0" : "28px 0",
+                  }}
+                />
 
-                <div style={paymentStyles.amountRow}>
+                <div
+                  style={{
+                    ...paymentStyles.amountRow,
+                    flexDirection: isMobile ? "column" : "row",
+                    alignItems: isMobile ? "flex-start" : "flex-end",
+                    gap: isMobile ? "16px" : "24px",
+                  }}
+                >
                   <div>
                     <p style={paymentStyles.amountLabel}>Payable now</p>
-                    <p style={paymentStyles.amountValue}>{formatCurrency(pricing.total)}</p>
+                    <p
+                      style={{
+                        ...paymentStyles.amountValue,
+                        fontSize: isMobile ? "2.2rem" : "2.8rem",
+                      }}
+                    >
+                      {formatCurrency(pricing.total)}
+                    </p>
                   </div>
 
-                  <div style={paymentStyles.orderWrap}>
+                  <div
+                    style={{
+                      ...paymentStyles.orderWrap,
+                      justifyItems: isMobile ? "start" : "end",
+                      textAlign: isMobile ? "left" : "right",
+                    }}
+                  >
                     <p style={paymentStyles.orderLabel}>Order ID</p>
                     <p style={paymentStyles.orderValue}>{orderId}</p>
                   </div>
@@ -441,24 +588,29 @@ function Payment({
                 selectedMethod={selectedMethod}
                 onSelect={handleMethodSelect}
                 disabled={isLoading}
+                compact={isCompact}
+                mobile={isMobile}
               />
 
               <PaymentMethodFields
+                billingName={billingName}
                 selectedMethod={selectedMethod}
                 upiId={upiId}
                 cardDetails={cardDetails}
                 selectedBank={selectedBank}
                 bankOptions={bankOptions}
                 validationErrors={validationErrors}
+                onBillingNameChange={handleBillingNameInputChange}
                 onUpiChange={handleUpiInputChange}
                 onCardChange={handleCardInputChange}
                 onBankChange={handleBankInputChange}
                 disabled={isLoading}
                 isCompact={isCompact}
+                isMobile={isMobile}
               />
             </div>
 
-            <div style={paymentStyles.rightColumn}>
+            <div style={{ ...paymentStyles.rightColumn, gap: isMobile ? "16px" : "24px" }}>
               <OrderSummary
                 cartItems={cartItems}
                 subtotal={subtotal}
@@ -467,6 +619,7 @@ function Payment({
                 appliedCoupon={appliedCoupon}
                 isApplyingCoupon={isApplyingCoupon}
                 isCompact={isCompact}
+                isMobile={isMobile}
                 onCouponChange={onCouponChange}
                 onApplyCoupon={onApplyCoupon}
                 onClearCoupon={onClearCoupon}
@@ -516,9 +669,22 @@ function Payment({
         amount={formatCurrency(pricing.total)}
         orderId={orderId}
         stage={walletModalStage}
+        compact={isCompact}
+        mobile={isMobile}
         onClose={handleWalletClose}
         onConfirm={handleWalletConfirm}
         onRetry={handleWalletRetry}
+      />
+
+      <MobilePaymentModal
+        open={isMobilePaymentModalOpen}
+        methodLabel={getMethodLabel()}
+        amount={formatCurrency(pricing.total)}
+        orderId={orderId}
+        stage={mobilePaymentModalStage}
+        compact={isCompact}
+        onClose={handleMobilePaymentClose}
+        onRetry={handleMobilePaymentRetry}
       />
     </main>
   );
@@ -538,7 +704,7 @@ const paymentStyles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "clamp(20px, 4vw, 40px) clamp(16px, 4vw, 28px)",
+    padding: "clamp(12px, 3vw, 40px) clamp(12px, 3vw, 28px)",
     background:
       "radial-gradient(circle at top, rgba(59, 130, 246, 0.16), transparent 30%), linear-gradient(180deg, #06121f 0%, #0b1728 48%, #08111d 100%)",
   },
@@ -560,21 +726,21 @@ const paymentStyles = {
   card: {
     position: "relative",
     overflow: "hidden",
-    borderRadius: "36px",
-    padding: "clamp(20px, 4vw, 36px)",
+    borderRadius: "clamp(24px, 5vw, 36px)",
+    padding: "clamp(16px, 3vw, 36px)",
     background: "rgba(8, 15, 27, 0.78)",
     border: "1px solid rgba(148, 163, 184, 0.16)",
     boxShadow: "0 28px 80px rgba(2, 6, 23, 0.55)",
     backdropFilter: "blur(18px)",
     color: "#f8fafc",
     display: "grid",
-    gap: "32px",
+    gap: "clamp(20px, 3vw, 32px)",
   },
   header: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    gap: "24px",
+    gap: "clamp(12px, 3vw, 24px)",
     flexWrap: "wrap",
   },
   headerLeft: {
@@ -610,7 +776,7 @@ const paymentStyles = {
   },
   heading: {
     margin: 0,
-    fontSize: "clamp(2rem, 6vw, 2.8rem)",
+    fontSize: "clamp(1.6rem, 5vw, 2.8rem)",
     lineHeight: 1,
     letterSpacing: "-0.04em",
     fontWeight: 800,
@@ -634,20 +800,20 @@ const paymentStyles = {
   },
   layout: {
     display: "grid",
-    gap: "clamp(20px, 3vw, 28px)",
+    gap: "clamp(16px, 2.5vw, 28px)",
     alignItems: "start",
   },
   leftColumn: {
     display: "grid",
-    gap: "24px",
+    gap: "clamp(14px, 2.5vw, 24px)",
   },
   rightColumn: {
     display: "grid",
-    gap: "24px",
+    gap: "clamp(14px, 2.5vw, 24px)",
   },
   productCard: {
-    padding: "30px",
-    borderRadius: "30px",
+    padding: "clamp(16px, 4vw, 30px)",
+    borderRadius: "clamp(24px, 5vw, 30px)",
     background:
       "linear-gradient(145deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.92) 60%, rgba(51, 65, 85, 0.9) 100%)",
     border: "1px solid rgba(148, 163, 184, 0.14)",
@@ -689,7 +855,7 @@ const paymentStyles = {
   },
   divider: {
     height: "1px",
-    margin: "28px 0",
+    margin: "clamp(12px, 3vw, 28px) 0",
     background:
       "linear-gradient(90deg, rgba(148, 163, 184, 0), rgba(148, 163, 184, 0.3), rgba(148, 163, 184, 0))",
   },
@@ -697,7 +863,7 @@ const paymentStyles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    gap: "24px",
+    gap: "clamp(12px, 3vw, 24px)",
     flexWrap: "wrap",
   },
   amountLabel: {
@@ -706,8 +872,8 @@ const paymentStyles = {
     fontSize: "0.88rem",
   },
   amountValue: {
-    margin: "12px 0 0",
-    fontSize: "2.8rem",
+    margin: "clamp(6px, 2vw, 12px) 0 0",
+    fontSize: "clamp(1.8rem, 5vw, 2.8rem)",
     lineHeight: 0.95,
     letterSpacing: "-0.06em",
     fontWeight: 800,
@@ -733,8 +899,8 @@ const paymentStyles = {
   },
   buttonWrap: {
     display: "grid",
-    gap: "18px",
-    paddingTop: "4px",
+    gap: "clamp(10px, 2vw, 18px)",
+    paddingTop: "clamp(0px, 1vw, 4px)",
   },
   loaderWrap: {
     display: "flex",

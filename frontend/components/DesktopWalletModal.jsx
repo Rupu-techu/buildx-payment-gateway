@@ -6,6 +6,8 @@ function DesktopWalletModal({
   amount,
   orderId,
   stage = "scan",
+  compact = false,
+  mobile = false,
   onClose,
   onConfirm,
   onRetry,
@@ -29,11 +31,32 @@ function DesktopWalletModal({
 
   return (
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-label={methodLabel}>
-      <div style={{ ...modalStyle, background: brandTone.panel }}>
-        <div style={headerStyle}>
+      <div
+        style={{
+          ...modalStyle,
+          background: brandTone.panel,
+          width: mobile ? "100%" : "min(860px, 100%)",
+          padding: mobile ? "18px" : compact ? "22px" : "28px",
+          gap: mobile ? "16px" : "22px",
+          borderRadius: mobile ? "24px" : "32px",
+        }}
+      >
+        <div
+          style={{
+            ...headerStyle,
+            gap: mobile ? "12px" : "16px",
+          }}
+        >
           <div>
             <p style={eyebrowStyle}>Desktop Payment</p>
-            <h3 style={titleStyle}>{methodLabel} on your mobile app</h3>
+            <h3
+              style={{
+                ...titleStyle,
+                fontSize: mobile ? "1.22rem" : "1.6rem",
+              }}
+            >
+              {methodLabel} on your mobile app
+            </h3>
           </div>
 
           <button type="button" onClick={onClose} style={closeButtonStyle}>
@@ -43,21 +66,60 @@ function DesktopWalletModal({
 
         {stage === "scan" ? (
           <>
-            <p style={bodyStyle}>
+            <p
+              style={{
+                ...bodyStyle,
+                fontSize: mobile ? "0.88rem" : "0.95rem",
+                textAlign: mobile ? "left" : "center",
+              }}
+            >
               Scan using mobile app to approve this payment. This mirrors a realistic
               desktop checkout where the final confirmation happens on your phone.
             </p>
 
-            <div style={scanLayoutStyle}>
-              <div style={qrCardStyle}>
-                <div style={qrWrapStyle}>
+            <div
+              style={{
+                ...scanLayoutStyle,
+                gridTemplateColumns: mobile
+                  ? "minmax(0, 1fr)"
+                  : scanLayoutStyle.gridTemplateColumns,
+                gap: mobile ? "14px" : "18px",
+              }}
+            >
+              <div
+                style={{
+                  ...qrCardStyle,
+                  gap: mobile ? "10px" : "14px",
+                  padding: mobile ? "16px" : "22px",
+                  borderRadius: mobile ? "20px" : "24px",
+                }}
+              >
+                <div
+                  style={{
+                    ...qrWrapStyle,
+                    width: mobile ? "min(220px, 100%)" : "min(240px, 100%)",
+                    padding: mobile ? "10px" : "12px",
+                    borderRadius: mobile ? "22px" : "28px",
+                  }}
+                >
                   <QrArt accent={brandTone.accent} />
                 </div>
-                <p style={metaLabelStyle}>Scan using mobile app</p>
-                <p style={metaBodyStyle}>Open {methodLabel}, scan the QR, and approve.</p>
+                <p style={{ ...metaLabelStyle, fontSize: mobile ? "0.92rem" : "0.98rem" }}>
+                  Scan using mobile app
+                </p>
+                <p style={{ ...metaBodyStyle, fontSize: mobile ? "0.82rem" : "0.88rem" }}>
+                  Open {methodLabel}, scan the QR, and approve.
+                </p>
               </div>
 
-              <div style={detailsCardStyle}>
+              <div
+                style={{
+                  ...detailsCardStyle,
+                  gap: mobile ? "10px" : "12px",
+                  padding: mobile ? "16px" : "22px",
+                  borderRadius: mobile ? "20px" : "24px",
+                }}
+              >
                 <div style={detailRowStyle}>
                   <span style={detailLabelStyle}>Amount</span>
                   <strong style={detailValueStyle}>{amount}</strong>
@@ -71,9 +133,22 @@ function DesktopWalletModal({
                   <strong style={detailValueStyle}>{methodLabel}</strong>
                 </div>
 
-                <div style={instructionCardStyle}>
+                <div
+                  style={{
+                    ...instructionCardStyle,
+                    marginTop: mobile ? "2px" : "6px",
+                    padding: mobile ? "14px" : "16px",
+                    borderRadius: mobile ? "16px" : "20px",
+                  }}
+                >
                   <p style={instructionTitleStyle}>How this works</p>
-                  <p style={instructionBodyStyle}>
+                  <p
+                    style={{
+                      ...instructionBodyStyle,
+                      fontSize: mobile ? "0.82rem" : "0.86rem",
+                      lineHeight: mobile ? 1.65 : 1.8,
+                    }}
+                  >
                     1. Scan the code on mobile.
                     <br />
                     2. Complete the in-app confirmation.
@@ -84,11 +159,31 @@ function DesktopWalletModal({
               </div>
             </div>
 
-            <div style={actionsStyle}>
-              <button type="button" onClick={onClose} style={secondaryButtonStyle}>
+            <div
+              style={{
+                ...actionsStyle,
+                justifyContent: mobile ? "stretch" : "flex-end",
+                gap: mobile ? "10px" : "12px",
+              }}
+            >
+              <button
+                type="button"
+                onClick={onClose}
+                style={{
+                  ...secondaryButtonStyle,
+                  width: mobile ? "100%" : "auto",
+                }}
+              >
                 Cancel
               </button>
-              <button type="button" onClick={onConfirm} style={primaryButtonStyle}>
+              <button
+                type="button"
+                onClick={onConfirm}
+                style={{
+                  ...primaryButtonStyle,
+                  width: mobile ? "100%" : "auto",
+                }}
+              >
                 I&apos;ve Completed Payment
               </button>
             </div>
@@ -195,7 +290,7 @@ const overlayStyle = {
   zIndex: 1000,
   display: "grid",
   placeItems: "center",
-  padding: "20px",
+  padding: "16px",
   backgroundColor: "rgba(2, 6, 23, 0.72)",
   backdropFilter: "blur(12px)",
 };
