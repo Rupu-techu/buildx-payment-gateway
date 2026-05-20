@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 
 import ReceiptDocument from "../components/ReceiptDocument.jsx";
-import { exportReceiptPdf, printReceipt } from "../utils/receipt.js";
+import { exportReceiptPdf, printReceipt, formatReceiptDate } from "../utils/receipt.js";
 
 function PaymentSuccess({
   paymentDetails,
@@ -10,6 +10,7 @@ function PaymentSuccess({
   receiptData,
 }) {
   const receiptRef = useRef(null);
+  const receiptSectionRef = useRef(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
   async function handleDownloadReceipt() {
@@ -31,6 +32,13 @@ function PaymentSuccess({
     }
 
     printReceipt(receiptRef.current);
+  }
+
+  function handleViewInvoice() {
+    receiptSectionRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   }
 
   return (
@@ -59,6 +67,11 @@ function PaymentSuccess({
             @keyframes success-ring {
               0% { transform: scale(0.82); opacity: 0.24; }
               100% { transform: scale(1.18); opacity: 0; }
+            }
+
+            @keyframes fade-in {
+              from { opacity: 0; transform: translateY(12px); }
+              to { opacity: 1; transform: translateY(0); }
             }
           `}</style>
 
@@ -118,6 +131,10 @@ function PaymentSuccess({
                 <p style={successStyles.metaValue}>{paymentDetails.method}</p>
               </article>
               <article style={successStyles.metaCard}>
+                <p style={successStyles.label}>Date & Time</p>
+                <p style={successStyles.metaValue}>{formatReceiptDate(paymentDetails.paidAt)}</p>
+              </article>
+              <article style={successStyles.metaCard}>
                 <p style={successStyles.label}>Order Reference</p>
                 <p style={successStyles.metaValue}>{paymentDetails.orderId}</p>
               </article>
@@ -149,6 +166,13 @@ function PaymentSuccess({
             </button>
             <button
               type="button"
+              onClick={handleViewInvoice}
+              style={successStyles.secondaryButton}
+            >
+              View Invoice
+            </button>
+            <button
+              type="button"
               onClick={handlePrintReceipt}
               style={successStyles.secondaryButton}
             >
@@ -163,7 +187,7 @@ function PaymentSuccess({
             </button>
           </div>
 
-          <section style={successStyles.receiptSection}>
+          <section ref={receiptSectionRef} style={successStyles.receiptSection}>
             <div style={successStyles.receiptHeader}>
               <div>
                 <p style={successStyles.label}>Receipt Preview</p>
@@ -403,6 +427,12 @@ const successStyles = {
   receiptSection: {
     display: "grid",
     gap: "18px",
+    padding: "20px",
+    borderRadius: "24px",
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    border: "1px solid rgba(148, 163, 184, 0.1)",
+    animation: "fade-in 420ms ease-out 260ms forwards",
+    opacity: 0,
   },
   receiptHeader: {
     display: "flex",
