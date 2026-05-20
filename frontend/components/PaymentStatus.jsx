@@ -1,3 +1,5 @@
+import StatePanel from "./StatePanel.jsx";
+
 const toneMap = {
   idle: {
     label: "Status",
@@ -41,8 +43,53 @@ const toneMap = {
   },
 };
 
-function PaymentStatus({ variant = "idle", message, payment, onRetry }) {
+function PaymentStatus({
+  variant = "idle",
+  message,
+  payment,
+  onRetry,
+  compact = false,
+}) {
   const tone = toneMap[variant] || toneMap.idle;
+
+  if (variant === "error") {
+    return (
+      <StatePanel
+        eyebrow="Payment Failed"
+        title="We could not complete this payment"
+        message={message}
+        variant="danger"
+        actionLabel={onRetry ? "Try Again" : undefined}
+        onAction={onRetry}
+        compact={compact}
+      >
+        {payment ? (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: compact
+                ? "minmax(0, 1fr)"
+                : "repeat(auto-fit, minmax(140px, 1fr))",
+              gap: "12px",
+            }}
+          >
+            <div>
+              <p style={metaLabelStyle}>Payment ID</p>
+              <p style={metaValueStyle}>{payment.paymentId}</p>
+            </div>
+            <div>
+              <p style={metaLabelStyle}>State</p>
+              <p style={metaValueStyle}>{payment.status}</p>
+            </div>
+            <div>
+              <p style={metaLabelStyle}>Method</p>
+              <p style={metaValueStyle}>{payment.method}</p>
+            </div>
+          </div>
+        ) : null}
+      </StatePanel>
+    );
+  }
 
   return (
     <section
@@ -118,7 +165,9 @@ function PaymentStatus({ variant = "idle", message, payment, onRetry }) {
             paddingTop: "16px",
             borderTop: "1px solid rgba(148, 163, 184, 0.12)",
             display: "grid",
-            gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+            gridTemplateColumns: compact
+              ? "minmax(0, 1fr)"
+              : "repeat(auto-fit, minmax(140px, 1fr))",
             gap: "12px",
           }}
         >
@@ -141,25 +190,6 @@ function PaymentStatus({ variant = "idle", message, payment, onRetry }) {
             <p style={metaValueStyle}>{payment.method}</p>
           </div>
         </div>
-      ) : null}
-
-      {variant === "error" && onRetry ? (
-        <button
-          type="button"
-          onClick={onRetry}
-          style={{
-            marginTop: "16px",
-            border: "1px solid rgba(248, 250, 252, 0.12)",
-            borderRadius: "14px",
-            padding: "11px 14px",
-            backgroundColor: "rgba(255, 255, 255, 0.05)",
-            color: "#f8fafc",
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
-          Retry Payment
-        </button>
       ) : null}
     </section>
   );

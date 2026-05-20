@@ -3,16 +3,25 @@ import { useEffect, useState } from "react";
 import Cart from "../components/Cart.jsx";
 import CheckoutStepper from "../components/CheckoutStepper.jsx";
 import ProductCard from "../components/ProductCard.jsx";
+import ToastViewport from "../components/ToastViewport.jsx";
 import Dashboard from "../pages/Dashboard.jsx";
 import Checkout from "../pages/Checkout.jsx";
 import Payment from "../pages/Payment.jsx";
 import PaymentSuccess from "../pages/PaymentSuccess.jsx";
-import { calculatePricing, normalizeCouponCode } from "../utils/pricing.js";
+import {
+  calculatePricing,
+  normalizeCouponCode,
+  resolveCoupon,
+} from "../utils/pricing.js";
+import {
+  sanitizeCardInput,
+  sanitizeUpiId,
+} from "../utils/paymentValidation.js";
 
 const appStyles = {
   page: {
     minHeight: "100vh",
-    padding: "32px 20px 48px",
+    padding: "clamp(20px, 4vw, 32px) clamp(16px, 4vw, 20px) 48px",
     background:
       "radial-gradient(circle at top, rgba(59, 130, 246, 0.16), transparent 26%), linear-gradient(180deg, #06121f 0%, #0b1728 48%, #08111d 100%)",
   },
@@ -24,7 +33,7 @@ const appStyles = {
   header: {
     display: "grid",
     gap: "10px",
-    marginBottom: "28px",
+    marginBottom: "clamp(20px, 4vw, 28px)",
   },
   badge: {
     display: "inline-flex",
@@ -139,7 +148,8 @@ function App() {
   const [orderId, setOrderId] = useState("DEMO-001");
   const [selectedMethod, setSelectedMethod] = useState("GOOGLE_PAY");
   const [couponCode, setCouponCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState("");
+  const [submittedCouponCode, setSubmittedCouponCode] = useState("");
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [upiId, setUpiId] = useState("");
   const [cardDetails, setCardDetails] = useState({
     name: "",
@@ -149,6 +159,7 @@ function App() {
   });
   const [selectedBank, setSelectedBank] = useState("SBI");
   const [successfulPayment, setSuccessfulPayment] = useState(null);
+  const [toasts, setToasts] = useState([]);
   const [isCompact, setIsCompact] = useState(() => {
     if (typeof window === "undefined") {
       return false;
@@ -170,9 +181,25 @@ function App() {
 
   const pricing = calculatePricing({
     cartItems,
-    couponCode: appliedCoupon,
+    couponCode: submittedCouponCode,
   });
   const subtotal = pricing.subtotal;
+  const appliedCoupon = pricing.appliedCoupon;
+
+  function showToast({ variant = "info", title, message, duration }) {
+    const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    setToasts((currentToasts) => [
+      ...currentToasts,
+      { id, variant, title, message, duration },
+    ]);
+  }
+
+  function dismissToast(id) {
+    setToasts((currentToasts) =>
+      currentToasts.filter((toast) => toast.id !== id)
+    );
+  }
 
   function addToCart(product) {
     setCartItems((currentItems) => {
@@ -215,6 +242,15 @@ function App() {
   }
 
   function proceedToCheckout() {
+    if (cartItems.length === 0) {
+      showToast({
+        variant: "warning",
+        title: "Cart is empty",
+        message: "Add the learning pass before moving to checkout.",
+      });
+      return;
+    }
+
     // The order id is regenerated when checkout begins so the cart flow
     // feels closer to a real payment session.
     setOrderId(`DEMO-${String(Date.now()).slice(-6)}`);
@@ -226,6 +262,15 @@ function App() {
   }
 
   function proceedToPayment() {
+    if (cartItems.length === 0) {
+      showToast({
+        variant: "warning",
+        title: "No items to pay for",
+        message: "Your cart is empty, so payment cannot start yet.",
+      });
+      return;
+    }
+
     setStage("payment");
   }
 
@@ -271,121 +316,200 @@ function App() {
     window.URL.revokeObjectURL(receiptUrl);
   }
 
-  function handleApplyCoupon() {
-    setAppliedCoupon(normalizeCouponCode(couponCode));
+  async function handleApplyCoupon() {
+    if (isApplyingCoupon) {
+      return;
+    }
+
+    if (cartItems.length === 0) {
+      showToast({
+        variant: "warning",
+        title: "Coupon skipped",
+        message: "Add an item before applying a coupon.",
+      });
+      return;
+    }
+
+    const normalizedCoupon = normalizeCouponCode(couponCode);
+
+    if (!normalizedCoupon) {
+      setSubmittedCouponCode("");
+      showToast({
+        variant: "warning",
+        title: "Coupon required",
+        message: "Enter a coupon code first.",
+      });
+      return;
+    }
+
+    setIsApplyingCoupon(true);
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, 500);
+    });
+
+    setSubmittedCouponCode(normalizedCoupon);
+    setIsApplyingCoupon(false);
+
+    const couponResult = resolveCoupon(normalizedCoupon, subtotal);
+
+    if (couponResult.status === "applied") {
+      showToast({
+        variant: "success",
+        title: "Coupon applied",
+        message: couponResult.message,
+      });
+      return;
+    }
+
+    showToast({
+      variant: "error",
+      title: "Invalid coupon",
+      message: couponResult.message,
+    });
+  }
+
+  function handleClearCoupon() {
+    setCouponCode("");
+    setSubmittedCouponCode("");
   }
 
   function handleCardChange(field, value) {
     setCardDetails((currentDetails) => ({
       ...currentDetails,
-      [field]: value,
+      [field]: sanitizeCardInput(field, value),
     }));
+  }
+
+  function handleUpiChange(value) {
+    setUpiId(sanitizeUpiId(value));
   }
 
   if (stage === "checkout") {
     return (
-      <Checkout
-        cartItems={cartItems}
-        subtotal={subtotal}
-        pricing={pricing}
-        orderId={orderId}
-        paymentMethods={paymentMethods}
-        selectedMethod={selectedMethod}
-        couponCode={couponCode}
-        appliedCoupon={appliedCoupon}
-        onBack={returnToCart}
-        onContinue={proceedToPayment}
-        onMethodSelect={setSelectedMethod}
-        onCouponChange={setCouponCode}
-        onApplyCoupon={handleApplyCoupon}
-        isCompact={isCompact}
-      />
+      <>
+        <ToastViewport toasts={toasts} onDismiss={dismissToast} />
+        <Checkout
+          cartItems={cartItems}
+          subtotal={subtotal}
+          pricing={pricing}
+          orderId={orderId}
+          paymentMethods={paymentMethods}
+          selectedMethod={selectedMethod}
+          couponCode={couponCode}
+          appliedCoupon={appliedCoupon}
+          onBack={returnToCart}
+          onContinue={proceedToPayment}
+          onMethodSelect={setSelectedMethod}
+          onCouponChange={setCouponCode}
+          onApplyCoupon={handleApplyCoupon}
+          isApplyingCoupon={isApplyingCoupon}
+          onClearCoupon={handleClearCoupon}
+          isCompact={isCompact}
+        />
+      </>
     );
   }
 
   if (stage === "payment") {
     return (
-      <Payment
-        cartItems={cartItems}
-        subtotal={subtotal}
-        pricing={pricing}
-        orderId={orderId}
-        paymentMethods={paymentMethods}
-        selectedMethod={selectedMethod}
-        couponCode={couponCode}
-        appliedCoupon={appliedCoupon}
-        upiId={upiId}
-        cardDetails={cardDetails}
-        selectedBank={selectedBank}
-        onBackToCheckout={returnToCheckout}
-        onMethodSelect={setSelectedMethod}
-        onCouponChange={setCouponCode}
-        onApplyCoupon={handleApplyCoupon}
-        onUpiChange={setUpiId}
-        onCardChange={handleCardChange}
-        onBankChange={setSelectedBank}
-        onPaymentSuccess={handlePaymentSuccess}
-        isCompact={isCompact}
-      />
+      <>
+        <ToastViewport toasts={toasts} onDismiss={dismissToast} />
+        <Payment
+          cartItems={cartItems}
+          subtotal={subtotal}
+          pricing={pricing}
+          orderId={orderId}
+          paymentMethods={paymentMethods}
+          selectedMethod={selectedMethod}
+          couponCode={couponCode}
+          appliedCoupon={appliedCoupon}
+          upiId={upiId}
+          cardDetails={cardDetails}
+          selectedBank={selectedBank}
+          onBackToCheckout={returnToCheckout}
+          onMethodSelect={setSelectedMethod}
+          onCouponChange={setCouponCode}
+          onApplyCoupon={handleApplyCoupon}
+          onClearCoupon={handleClearCoupon}
+          onUpiChange={handleUpiChange}
+          onCardChange={handleCardChange}
+          onBankChange={setSelectedBank}
+          onPaymentSuccess={handlePaymentSuccess}
+          onNotify={showToast}
+          isApplyingCoupon={isApplyingCoupon}
+          isCompact={isCompact}
+        />
+      </>
     );
   }
 
   if (stage === "success" && successfulPayment) {
     return (
-      <PaymentSuccess
-        paymentDetails={successfulPayment}
-        onGoToDashboard={goToDashboard}
-        onBackToHome={goBackHome}
-        onDownloadReceipt={downloadReceipt}
-      />
+      <>
+        <ToastViewport toasts={toasts} onDismiss={dismissToast} />
+        <PaymentSuccess
+          paymentDetails={successfulPayment}
+          onGoToDashboard={goToDashboard}
+          onBackToHome={goBackHome}
+          onDownloadReceipt={downloadReceipt}
+        />
+      </>
     );
   }
 
   if (stage === "dashboard") {
-    return <Dashboard onBackHome={goBackHome} />;
+    return (
+      <>
+        <ToastViewport toasts={toasts} onDismiss={dismissToast} />
+        <Dashboard onBackHome={goBackHome} />
+      </>
+    );
   }
 
   return (
-    <main style={appStyles.page}>
-      <section style={appStyles.shell}>
-        <header style={appStyles.header}>
-          <span style={appStyles.badge}>BuildX Payments</span>
+    <>
+      <ToastViewport toasts={toasts} onDismiss={dismissToast} />
+      <main style={appStyles.page}>
+        <section style={appStyles.shell}>
+          <header style={appStyles.header}>
+            <span style={appStyles.badge}>BuildX Payments</span>
 
-          <div style={appStyles.titleRow}>
-            <div>
-              <h1 style={appStyles.title}>Cart to checkout demo</h1>
-              <p style={appStyles.subtitle}>
-                A minimal product, cart, and payment flow for the gateway module.
-              </p>
+            <div style={appStyles.titleRow}>
+              <div>
+                <h1 style={appStyles.title}>Cart to checkout demo</h1>
+                <p style={appStyles.subtitle}>
+                  A minimal product, cart, and payment flow for the gateway module.
+                </p>
+              </div>
+
+              <span style={appStyles.stagePill}>Product to Payment Flow</span>
             </div>
 
-            <span style={appStyles.stagePill}>Product to Payment Flow</span>
-          </div>
+            <CheckoutStepper activeStep="cart" compact={isCompact} />
+          </header>
 
-          <CheckoutStepper activeStep="cart" compact={isCompact} />
-        </header>
-
-        <section
-          style={{
-            ...appStyles.layout,
-            gridTemplateColumns: isCompact
-              ? "minmax(0, 1fr)"
-              : "minmax(0, 1.15fr) minmax(340px, 0.85fr)",
-          }}
-        >
-          <ProductCard product={mockProduct} onAddToCart={addToCart} />
-          <Cart
-            items={cartItems}
-            subtotal={subtotal}
-            pricing={pricing}
-            onIncrease={increaseQuantity}
-            onDecrease={decreaseQuantity}
-            onRemove={removeFromCart}
-            onProceed={proceedToCheckout}
-          />
+          <section
+            style={{
+              ...appStyles.layout,
+              gridTemplateColumns: isCompact
+                ? "minmax(0, 1fr)"
+                : "minmax(0, 1.15fr) minmax(340px, 0.85fr)",
+            }}
+          >
+            <ProductCard product={mockProduct} onAddToCart={addToCart} />
+            <Cart
+              items={cartItems}
+              subtotal={subtotal}
+              pricing={pricing}
+              onIncrease={increaseQuantity}
+              onDecrease={decreaseQuantity}
+              onRemove={removeFromCart}
+              onProceed={proceedToCheckout}
+            />
+          </section>
         </section>
-      </section>
-    </main>
+      </main>
+    </>
   );
 }
 

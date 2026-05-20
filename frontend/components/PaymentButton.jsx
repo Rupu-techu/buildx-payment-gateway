@@ -3,6 +3,7 @@ function PaymentButton({
   onClick,
   disabled = false,
   loading = false,
+  loadingLabel = "Processing...",
   type = "button",
   futureAction = "payment-request",
 }) {
@@ -34,6 +35,10 @@ function PaymentButton({
           : "0 16px 30px rgba(15, 23, 42, 0.22)",
         transition:
           "transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "10px",
       }}
       onMouseEnter={(event) => {
         if (!isDisabled) {
@@ -52,8 +57,24 @@ function PaymentButton({
         }
       }}
     >
-      {/* This label can later switch to API states like "Creating order..." */}
-      {loading ? "Processing..." : label}
+      {loading ? (
+        <>
+          <span
+            aria-hidden="true"
+            style={{
+              width: "16px",
+              height: "16px",
+              borderRadius: "999px",
+              border: "2px solid rgba(2, 6, 23, 0.22)",
+              borderTopColor: "#020617",
+              animation: "payment-spin 0.8s linear infinite",
+            }}
+          />
+          {loadingLabel}
+        </>
+      ) : (
+        label
+      )}
     </button>
   );
 }

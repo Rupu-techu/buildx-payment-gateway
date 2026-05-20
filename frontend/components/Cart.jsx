@@ -1,4 +1,5 @@
 import CartItem from "./CartItem.jsx";
+import StatePanel from "./StatePanel.jsx";
 
 function Cart({
   items,
@@ -77,19 +78,13 @@ function Cart({
       </div>
 
       {items.length === 0 ? (
-        <div
-          style={{
-            padding: "22px",
-            borderRadius: "22px",
-            background:
-              "linear-gradient(180deg, rgba(15, 23, 42, 0.72), rgba(15, 23, 42, 0.52))",
-            border: "1px solid rgba(148, 163, 184, 0.12)",
-            color: "#94a3b8",
-            lineHeight: 1.6,
-          }}
-        >
-          Add the mock product to begin the payment flow.
-        </div>
+        <StatePanel
+          eyebrow="Empty Cart"
+          title="Your cart is waiting for its first item"
+          message="Add the BuildX Learning Pass to preview the polished checkout, coupon, and payment experience."
+          variant="neutral"
+          compact
+        />
       ) : (
         <div style={{ display: "grid", gap: "14px" }}>
           {items.map((item) => (

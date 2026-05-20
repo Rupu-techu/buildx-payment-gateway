@@ -7,7 +7,11 @@ import PaymentButton from "../components/PaymentButton.jsx";
 import PaymentMethodFields from "../components/PaymentMethodFields.jsx";
 import PaymentMethodSelector from "../components/PaymentMethodSelector.jsx";
 import PaymentStatus from "../components/PaymentStatus.jsx";
+import StatePanel from "../components/StatePanel.jsx";
 import { simulatePayment } from "../services/paymentService.js";
+import {
+  validatePaymentDetails,
+} from "../utils/paymentValidation.js";
 
 const statusContent = {
   SUCCESS: {
@@ -46,16 +50,39 @@ function Payment({
   onMethodSelect,
   onCouponChange,
   onApplyCoupon,
+  onClearCoupon,
   onUpiChange,
   onCardChange,
   onBankChange,
   onPaymentSuccess,
+  onNotify,
+  isApplyingCoupon = false,
   isCompact = false,
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(initialStatus);
+  const [validationErrors, setValidationErrors] = useState({});
   const primaryItem = cartItems[0];
   const itemCount = cartItems.reduce((count, item) => count + item.quantity, 0);
+
+  if (cartItems.length === 0) {
+    return (
+      <main style={paymentStyles.page}>
+        <section style={paymentStyles.shell}>
+          <article style={paymentStyles.card}>
+            <StatePanel
+              eyebrow="Empty Cart"
+              title="There is no payment to process yet"
+              message="Return to the cart, add the BuildX Learning Pass, and then continue back here to complete the payment flow."
+              variant="neutral"
+              actionLabel="Back to Checkout"
+              onAction={onBackToCheckout}
+            />
+          </article>
+        </section>
+      </main>
+    );
+  }
 
   function handleMethodSelect(methodId) {
     onMethodSelect(methodId);
@@ -64,6 +91,7 @@ function Payment({
       message: "Payment method updated",
       payment: null,
     });
+    setValidationErrors({});
   }
 
   function getMethodLabel() {
@@ -73,42 +101,59 @@ function Payment({
     );
   }
 
-  function isPaymentDetailsReady() {
-    if (selectedMethod === "UPI") {
-      return upiId.trim().length > 0;
-    }
+  function updateFieldError(fieldKey, nextState) {
+    const nextValidation = validatePaymentDetails(nextState);
 
-    if (selectedMethod === "CARD") {
-      return (
-        cardDetails.name.trim().length > 0 &&
-        cardDetails.number.trim().length > 0 &&
-        cardDetails.expiry.trim().length > 0 &&
-        cardDetails.cvv.trim().length > 0
-      );
-    }
+    setValidationErrors((currentErrors) => {
+      if (!currentErrors[fieldKey]) {
+        return currentErrors;
+      }
 
-    if (selectedMethod === "NET_BANKING") {
-      return selectedBank.trim().length > 0;
-    }
+      const nextErrors = { ...currentErrors };
 
-    return true;
+      if (nextValidation.errors[fieldKey]) {
+        nextErrors[fieldKey] = nextValidation.errors[fieldKey];
+      } else {
+        delete nextErrors[fieldKey];
+      }
+
+      return nextErrors;
+    });
   }
 
   async function handleMockPayment() {
-    if (!isPaymentDetailsReady()) {
-      setPaymentStatus({
-        variant: "error",
-        message:
-          selectedMethod === "UPI"
-            ? "Enter a mock UPI ID before continuing"
-            : selectedMethod === "CARD"
-              ? "Complete the mock card fields before continuing"
-              : "Choose a bank before continuing",
-        payment: null,
+    if (cartItems.length === 0) {
+      onNotify?.({
+        variant: "warning",
+        title: "Cart is empty",
+        message: "Add an item before trying to complete payment.",
       });
       return;
     }
 
+    const validation = validatePaymentDetails({
+      selectedMethod,
+      upiId,
+      cardDetails,
+      selectedBank,
+    });
+
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors);
+      setPaymentStatus({
+        variant: "idle",
+        message: "Complete the required payment details to continue",
+        payment: null,
+      });
+      onNotify?.({
+        variant: "error",
+        title: "Check your payment details",
+        message: "Fix the highlighted fields and try again.",
+      });
+      return;
+    }
+
+    setValidationErrors({});
     setIsLoading(true);
     setPaymentStatus({
       variant: "loading",
@@ -131,7 +176,26 @@ function Payment({
         payment: response,
       });
 
+      if (response.status === "FAILED") {
+        onNotify?.({
+          variant: "error",
+          title: "Payment failed",
+          message: `Your ${getMethodLabel()} payment was declined. Please try again.`,
+        });
+      } else if (response.status === "PENDING") {
+        onNotify?.({
+          variant: "warning",
+          title: "Payment pending",
+          message: `We are still waiting for ${getMethodLabel()} confirmation.`,
+        });
+      }
+
       if (response.status === "SUCCESS") {
+        onNotify?.({
+          variant: "success",
+          title: "Payment successful",
+          message: "Payment received and access is ready to unlock.",
+        });
         onPaymentSuccess({
           transactionId: response.paymentId,
           method:
@@ -148,6 +212,11 @@ function Payment({
         message: error.message || "Payment request failed",
         payment: null,
       });
+      onNotify?.({
+        variant: "error",
+        title: "Request failed",
+        message: error.message || "Payment request failed",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -158,6 +227,41 @@ function Payment({
       variant: "idle",
       message: "Ready to try payment again",
       payment: null,
+    });
+  }
+
+  function handleUpiInputChange(value) {
+    onUpiChange(value);
+    updateFieldError("upiId", {
+      selectedMethod,
+      upiId: value,
+      cardDetails,
+      selectedBank,
+    });
+  }
+
+  function handleCardInputChange(field, value) {
+    const nextCardDetails = {
+      ...cardDetails,
+      [field]: value,
+    };
+
+    onCardChange(field, value);
+    updateFieldError(field, {
+      selectedMethod,
+      upiId,
+      cardDetails: nextCardDetails,
+      selectedBank,
+    });
+  }
+
+  function handleBankInputChange(value) {
+    onBankChange(value);
+    updateFieldError("bank", {
+      selectedMethod,
+      upiId,
+      cardDetails,
+      selectedBank: value,
     });
   }
 
@@ -230,6 +334,7 @@ function Payment({
                 methods={paymentMethods}
                 selectedMethod={selectedMethod}
                 onSelect={handleMethodSelect}
+                disabled={isLoading}
               />
 
               <PaymentMethodFields
@@ -237,9 +342,12 @@ function Payment({
                 upiId={upiId}
                 cardDetails={cardDetails}
                 selectedBank={selectedBank}
-                onUpiChange={onUpiChange}
-                onCardChange={onCardChange}
-                onBankChange={onBankChange}
+                validationErrors={validationErrors}
+                onUpiChange={handleUpiInputChange}
+                onCardChange={handleCardInputChange}
+                onBankChange={handleBankInputChange}
+                disabled={isLoading}
+                isCompact={isCompact}
               />
             </div>
 
@@ -250,8 +358,11 @@ function Payment({
                 pricing={pricing}
                 couponCode={couponCode}
                 appliedCoupon={appliedCoupon}
+                isApplyingCoupon={isApplyingCoupon}
+                isCompact={isCompact}
                 onCouponChange={onCouponChange}
                 onApplyCoupon={onApplyCoupon}
+                onClearCoupon={onClearCoupon}
               />
 
               <PaymentStatus
@@ -259,6 +370,7 @@ function Payment({
                 message={paymentStatus.message}
                 payment={paymentStatus.payment}
                 onRetry={paymentStatus.variant === "error" ? handleRetryPayment : null}
+                compact={isCompact}
               />
 
               <div style={paymentStyles.buttonWrap}>
@@ -267,6 +379,7 @@ function Payment({
                   onClick={handleMockPayment}
                   disabled={cartItems.length === 0}
                   loading={isLoading}
+                  loadingLabel="Processing Payment..."
                   futureAction="mock-payment-request"
                 />
 
@@ -298,7 +411,7 @@ const paymentStyles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "40px 28px",
+    padding: "clamp(20px, 4vw, 40px) clamp(16px, 4vw, 28px)",
     background:
       "radial-gradient(circle at top, rgba(59, 130, 246, 0.16), transparent 30%), linear-gradient(180deg, #06121f 0%, #0b1728 48%, #08111d 100%)",
   },
@@ -321,7 +434,7 @@ const paymentStyles = {
     position: "relative",
     overflow: "hidden",
     borderRadius: "36px",
-    padding: "36px",
+    padding: "clamp(20px, 4vw, 36px)",
     background: "rgba(8, 15, 27, 0.78)",
     border: "1px solid rgba(148, 163, 184, 0.16)",
     boxShadow: "0 28px 80px rgba(2, 6, 23, 0.55)",
@@ -394,7 +507,7 @@ const paymentStyles = {
   },
   layout: {
     display: "grid",
-    gap: "28px",
+    gap: "clamp(20px, 3vw, 28px)",
     alignItems: "start",
   },
   leftColumn: {

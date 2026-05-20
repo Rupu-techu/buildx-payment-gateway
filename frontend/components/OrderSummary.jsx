@@ -1,3 +1,4 @@
+import StatePanel from "./StatePanel.jsx";
 import { couponCatalog, formatCurrency } from "../utils/pricing.js";
 
 function OrderSummary({
@@ -6,8 +7,11 @@ function OrderSummary({
   pricing,
   couponCode,
   appliedCoupon,
+  isApplyingCoupon = false,
+  isCompact = false,
   onCouponChange,
   onApplyCoupon,
+  onClearCoupon,
 }) {
   return (
     <section
@@ -180,7 +184,9 @@ function OrderSummary({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "minmax(0, 1fr) auto",
+            gridTemplateColumns: isCompact
+              ? "minmax(0, 1fr)"
+              : "minmax(0, 1fr) auto",
             gap: "12px",
           }}
         >
@@ -194,27 +200,35 @@ function OrderSummary({
           <button
             type="button"
             onClick={onApplyCoupon}
-            style={couponButtonStyle}
+            disabled={isApplyingCoupon}
+            style={couponButtonStyle(isApplyingCoupon)}
           >
-            Apply
+            {isApplyingCoupon ? "Applying..." : "Apply"}
           </button>
         </div>
 
-        <p
-          style={{
-            margin: 0,
-            color:
-              pricing.couponStatus === "applied"
-                ? "#6ee7b7"
-                : pricing.couponStatus === "invalid"
-                  ? "#fca5a5"
-                  : "#94a3b8",
-            fontSize: "0.84rem",
-            lineHeight: 1.5,
-          }}
-        >
-          {pricing.couponMessage}
-        </p>
+        {pricing.couponStatus === "invalid" ? (
+          <StatePanel
+            eyebrow="Invalid Coupon"
+            title="That coupon could not be applied"
+            message={pricing.couponMessage}
+            variant="warning"
+            actionLabel={onClearCoupon ? "Clear Coupon" : undefined}
+            onAction={onClearCoupon}
+            compact
+          />
+        ) : (
+          <p
+            style={{
+              margin: 0,
+              color: pricing.couponStatus === "applied" ? "#6ee7b7" : "#94a3b8",
+              fontSize: "0.84rem",
+              lineHeight: 1.5,
+            }}
+          >
+            {pricing.couponMessage}
+          </p>
+        )}
       </div>
 
       <div
@@ -303,16 +317,19 @@ const inputStyle = {
   outline: "none",
 };
 
-const couponButtonStyle = {
+const couponButtonStyle = (disabled) => ({
   minWidth: "96px",
+  minHeight: "52px",
   border: "1px solid rgba(255, 255, 255, 0.08)",
   borderRadius: "16px",
   padding: "0 16px",
-  background: "linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%)",
-  color: "#020617",
+  background: disabled
+    ? "linear-gradient(135deg, #334155 0%, #475569 100%)"
+    : "linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%)",
+  color: disabled ? "#cbd5e1" : "#020617",
   fontWeight: 700,
-  cursor: "pointer",
-};
+  cursor: disabled ? "not-allowed" : "pointer",
+});
 
 const couponTagStyle = {
   display: "inline-flex",

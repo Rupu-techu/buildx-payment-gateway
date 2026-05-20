@@ -4,7 +4,12 @@ const methodGridStyle = {
   gap: "12px",
 };
 
-function PaymentMethodSelector({ methods, selectedMethod, onSelect }) {
+function PaymentMethodSelector({
+  methods,
+  selectedMethod,
+  onSelect,
+  disabled = false,
+}) {
   return (
     <section
       style={{
@@ -26,6 +31,7 @@ function PaymentMethodSelector({ methods, selectedMethod, onSelect }) {
               key={method.id}
               type="button"
               onClick={() => onSelect(method.id)}
+              disabled={disabled}
               style={{
                 display: "grid",
                 gap: "12px",
@@ -41,8 +47,9 @@ function PaymentMethodSelector({ methods, selectedMethod, onSelect }) {
                 boxShadow: isActive
                   ? "0 14px 28px rgba(37, 99, 235, 0.12)"
                   : "none",
-                cursor: "pointer",
+                cursor: disabled ? "not-allowed" : "pointer",
                 color: "#f8fafc",
+                opacity: disabled ? 0.65 : 1,
               }}
             >
               <div

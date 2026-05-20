@@ -8,7 +8,7 @@ function Loader({ label = "Processing payment...", size = "medium" }) {
         display: "inline-flex",
         alignItems: "center",
         gap: "12px",
-        color: "#334155",
+        color: "#cbd5e1",
       }}
     >
       <style>
@@ -27,7 +27,7 @@ function Loader({ label = "Processing payment...", size = "medium" }) {
           height: dimensions,
           borderRadius: "999px",
           border: `${borderWidth} solid rgba(148, 163, 184, 0.35)`,
-          borderTopColor: "#0f172a",
+          borderTopColor: "#f8fafc",
           animation: "payment-spin 0.8s linear infinite",
         }}
       />

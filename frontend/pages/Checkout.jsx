@@ -2,6 +2,7 @@ import CheckoutStepper from "../components/CheckoutStepper.jsx";
 import OrderSummary from "../components/OrderSummary.jsx";
 import PaymentButton from "../components/PaymentButton.jsx";
 import PaymentMethodSelector from "../components/PaymentMethodSelector.jsx";
+import StatePanel from "../components/StatePanel.jsx";
 
 const checkoutStyles = {
   page: {
@@ -9,7 +10,7 @@ const checkoutStyles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "40px 28px",
+    padding: "clamp(20px, 4vw, 40px) clamp(16px, 4vw, 28px)",
     background:
       "radial-gradient(circle at top, rgba(59, 130, 246, 0.16), transparent 30%), linear-gradient(180deg, #06121f 0%, #0b1728 48%, #08111d 100%)",
   },
@@ -32,7 +33,7 @@ const checkoutStyles = {
     position: "relative",
     overflow: "hidden",
     borderRadius: "36px",
-    padding: "36px",
+    padding: "clamp(20px, 4vw, 36px)",
     background: "rgba(8, 15, 27, 0.78)",
     border: "1px solid rgba(148, 163, 184, 0.16)",
     boxShadow: "0 28px 80px rgba(2, 6, 23, 0.55)",
@@ -103,7 +104,7 @@ const checkoutStyles = {
   },
   layout: {
     display: "grid",
-    gap: "28px",
+    gap: "clamp(20px, 3vw, 28px)",
     alignItems: "start",
   },
   leftColumn: {
@@ -265,6 +266,8 @@ function Checkout({
   onMethodSelect,
   onCouponChange,
   onApplyCoupon,
+  onClearCoupon,
+  isApplyingCoupon = false,
   isCompact = false,
 }) {
   const primaryItem = cartItems[0];
@@ -272,6 +275,25 @@ function Checkout({
   const selectedMethodDetails = paymentMethods.find(
     (method) => method.id === selectedMethod
   );
+
+  if (cartItems.length === 0) {
+    return (
+      <main style={checkoutStyles.page}>
+        <section style={checkoutStyles.shell}>
+          <article style={checkoutStyles.card}>
+            <StatePanel
+              eyebrow="Empty Cart"
+              title="Checkout is empty right now"
+              message="Add the product from the cart screen first, then come back to review totals and continue to payment."
+              variant="neutral"
+              actionLabel="Back to Cart"
+              onAction={onBack}
+            />
+          </article>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main style={checkoutStyles.page}>
@@ -401,8 +423,11 @@ function Checkout({
                 pricing={pricing}
                 couponCode={couponCode}
                 appliedCoupon={appliedCoupon}
+                isApplyingCoupon={isApplyingCoupon}
+                isCompact={isCompact}
                 onCouponChange={onCouponChange}
                 onApplyCoupon={onApplyCoupon}
+                onClearCoupon={onClearCoupon}
               />
 
               <div style={{ display: "grid", gap: "18px", paddingTop: "4px" }}>

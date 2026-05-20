@@ -21,7 +21,7 @@ const toneMap = {
   },
 };
 
-function ToastMessage({ message, variant = "info" }) {
+function ToastMessage({ title, message, variant = "info", onDismiss }) {
   if (!message) {
     return null;
   }
@@ -32,15 +32,50 @@ function ToastMessage({ message, variant = "info" }) {
     <div
       role="status"
       style={{
-        padding: "0.85rem 1rem",
-        borderRadius: "0.8rem",
+        display: "grid",
+        gap: "8px",
+        padding: "1rem",
+        borderRadius: "1rem",
         border: `1px solid ${tone.borderColor}`,
         backgroundColor: tone.backgroundColor,
         color: tone.color,
         lineHeight: 1.5,
+        boxShadow: "0 16px 34px rgba(15, 23, 42, 0.18)",
       }}
     >
-      {message}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: "12px",
+          alignItems: "flex-start",
+        }}
+      >
+        <div style={{ display: "grid", gap: "4px" }}>
+          {title ? (
+            <strong style={{ fontSize: "0.92rem", lineHeight: 1.2 }}>{title}</strong>
+          ) : null}
+          <span>{message}</span>
+        </div>
+
+        {onDismiss ? (
+          <button
+            type="button"
+            onClick={onDismiss}
+            aria-label="Dismiss notification"
+            style={{
+              border: "none",
+              background: "transparent",
+              color: "inherit",
+              fontSize: "1rem",
+              lineHeight: 1,
+              cursor: "pointer",
+            }}
+          >
+            x
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }
