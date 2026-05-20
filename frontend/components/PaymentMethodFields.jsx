@@ -82,38 +82,7 @@ function PaymentMethodFields({
           </span>
         </div>
 
-        <p style={supportCopyStyle}>{brandDetails.message}</p>
 
-        <div
-          style={{
-            ...infoGridStyle,
-            gridTemplateColumns: isMobile ? "minmax(0, 1fr)" : infoGridStyle.gridTemplateColumns,
-          }}
-        >
-          <article style={infoCardStyle}>
-            <p style={fieldLabelStyle}>Experience</p>
-            <p style={valueCopyStyle}>Desktop QR to mobile approval</p>
-          </article>
-          <article style={infoCardStyle}>
-            <p style={fieldLabelStyle}>Activation</p>
-            <p style={valueCopyStyle}>Subscription starts immediately</p>
-          </article>
-        </div>
-
-        <div
-          style={{
-            ...actionPanelStyle,
-            flexDirection: isMobile ? "column" : "row",
-            alignItems: isMobile ? "flex-start" : "center",
-            padding: isMobile ? "14px 16px" : "16px 18px",
-          }}
-        >
-          <span style={{ ...logoDotStyle, backgroundColor: brandDetails.accent }} />
-          <div>
-            <p style={fieldLabelStyle}>{brandDetails.label}</p>
-            <p style={valueCopyStyle}>{brandDetails.action}</p>
-          </div>
-        </div>
       </section>
     );
   }
@@ -147,11 +116,6 @@ function PaymentMethodFields({
         {validationErrors.upiId ? (
           <p style={errorTextStyle}>{validationErrors.upiId}</p>
         ) : null}
-
-        <p style={supportCopyStyle}>
-          Enter a mock UPI ID to simulate direct approval. Your course or subscription
-          access starts right after payment.
-        </p>
       </section>
     );
   }
@@ -237,11 +201,6 @@ function PaymentMethodFields({
             ) : null}
           </label>
         </div>
-
-        <p style={supportCopyStyle}>
-          Your payment is simulated locally, but the layout mirrors a premium digital
-          subscription checkout.
-        </p>
       </section>
     );
   }
@@ -276,11 +235,6 @@ function PaymentMethodFields({
         {validationErrors.bank ? (
           <p style={errorTextStyle}>{validationErrors.bank}</p>
         ) : null}
-
-        <p style={supportCopyStyle}>
-          Choose from popular Indian banks to simulate a more realistic redirection
-          flow before returning with access activation.
-        </p>
       </section>
     );
   }
@@ -396,46 +350,6 @@ const badgeStyle = {
   backgroundColor: "rgba(255, 255, 255, 0.05)",
   fontSize: "0.78rem",
   fontWeight: 700,
-};
-
-const infoGridStyle = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-  gap: "12px",
-};
-
-const infoCardStyle = {
-  display: "grid",
-  gap: "6px",
-  padding: "14px 16px",
-  borderRadius: "18px",
-  backgroundColor: "rgba(255, 255, 255, 0.04)",
-  border: "1px solid rgba(148, 163, 184, 0.08)",
-};
-
-const valueCopyStyle = {
-  margin: 0,
-  color: "#f8fafc",
-  fontSize: "0.92rem",
-  fontWeight: 600,
-};
-
-const actionPanelStyle = {
-  display: "flex",
-  gap: "12px",
-  alignItems: "center",
-  padding: "16px 18px",
-  borderRadius: "20px",
-  backgroundColor: "rgba(2, 6, 23, 0.24)",
-  border: "1px solid rgba(148, 163, 184, 0.1)",
-};
-
-const logoDotStyle = {
-  width: "14px",
-  height: "14px",
-  borderRadius: "999px",
-  flexShrink: 0,
-  boxShadow: "0 0 18px currentColor",
 };
 
 export default PaymentMethodFields;

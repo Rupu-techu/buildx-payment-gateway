@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import CheckoutStepper from "../components/CheckoutStepper.jsx";
 import DesktopWalletModal from "../components/DesktopWalletModal.jsx";
+import MobilePaymentModal from "../components/MobilePaymentModal.jsx";
 import Loader from "../components/Loader.jsx";
 import OrderSummary from "../components/OrderSummary.jsx";
 import PaymentButton from "../components/PaymentButton.jsx";
@@ -13,6 +14,7 @@ import { simulatePayment } from "../services/paymentService.js";
 import {
   validatePaymentDetails,
 } from "../utils/paymentValidation.js";
+import { getPaymentFlowType } from "../utils/deviceDetection.js";
 
 const statusContent = {
   SUCCESS: {
@@ -69,6 +71,9 @@ function Payment({
   const [validationErrors, setValidationErrors] = useState({});
   const [walletModalStage, setWalletModalStage] = useState("scan");
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [mobilePaymentModalStage, setMobilePaymentModalStage] = useState("processing");
+  const [isMobilePaymentModalOpen, setIsMobilePaymentModalOpen] = useState(false);
+  const flowType = getPaymentFlowType();
   const primaryItem = cartItems[0];
   const itemCount = cartItems.reduce((count, item) => count + item.quantity, 0);
   const selectedMethodDetails = paymentMethods.find(
@@ -259,7 +264,11 @@ function Payment({
 
       if (response.status === "FAILED") {
         if (fromWallet) {
-          setWalletModalStage("failed");
+          if (flowType === "mobile-app") {
+            setMobilePaymentModalStage("failed");
+          } else {
+            setWalletModalStage("failed");
+          }
         }
         onNotify?.({
           variant: "error",
@@ -268,7 +277,11 @@ function Payment({
         });
       } else if (response.status === "PENDING") {
         if (fromWallet) {
-          setWalletModalStage("failed");
+          if (flowType === "mobile-app") {
+            setMobilePaymentModalStage("failed");
+          } else {
+            setWalletModalStage("failed");
+          }
         }
         onNotify?.({
           variant: "warning",
@@ -279,9 +292,15 @@ function Payment({
 
       if (response.status === "SUCCESS") {
         if (fromWallet) {
-          setWalletModalStage("success");
-          await wait(850);
-          setIsWalletModalOpen(false);
+          if (flowType === "mobile-app") {
+            setMobilePaymentModalStage("success");
+            await wait(850);
+            setIsMobilePaymentModalOpen(false);
+          } else {
+            setWalletModalStage("success");
+            await wait(850);
+            setIsWalletModalOpen(false);
+          }
         }
 
         await finalizeSuccessfulPayment(response);
@@ -293,7 +312,11 @@ function Payment({
         payment: null,
       });
       if (fromWallet) {
-        setWalletModalStage("failed");
+        if (flowType === "mobile-app") {
+          setMobilePaymentModalStage("failed");
+        } else {
+          setWalletModalStage("failed");
+        }
       }
       onNotify?.({
         variant: "error",
@@ -303,6 +326,7 @@ function Payment({
     } finally {
       setIsLoading(false);
     }
+  }
   }
 
   async function handleMockPayment() {
@@ -320,13 +344,28 @@ function Payment({
     }
 
     if (requiresWalletModal()) {
-      setWalletModalStage("scan");
-      setIsWalletModalOpen(true);
-      setPaymentStatus({
-        variant: "idle",
-        message: `Open the ${getMethodLabel()} QR modal and confirm on your phone`,
-        payment: null,
-      });
+      // Use device-specific payment flow
+      if (flowType === "mobile-app") {
+        // Mobile: show direct app opening flow
+        setMobilePaymentModalStage("redirecting");
+        setIsMobilePaymentModalOpen(true);
+        setPaymentStatus({
+          variant: "idle",
+          message: `Opening ${getMethodLabel()} for payment`,
+          payment: null,
+        });
+        await wait(1500);
+        await runPaymentFlow({ fromWallet: true });
+      } else {
+        // Desktop: show QR code modal
+        setWalletModalStage("scan");
+        setIsWalletModalOpen(true);
+        setPaymentStatus({
+          variant: "idle",
+          message: `Open the ${getMethodLabel()} QR modal and confirm on your phone`,
+          payment: null,
+        });
+      }
       return;
     }
 
@@ -359,6 +398,19 @@ function Payment({
 
   function handleWalletRetry() {
     setWalletModalStage("scan");
+  }
+
+  function handleMobilePaymentClose() {
+    if (isLoading) {
+      return;
+    }
+    setIsMobilePaymentModalOpen(false);
+    setMobilePaymentModalStage("processing");
+  }
+
+  function handleMobilePaymentRetry() {
+    setMobilePaymentModalStage("redirecting");
+    handleMockPayment();
   }
 
   function handleUpiInputChange(value) {
@@ -623,6 +675,17 @@ function Payment({
         onConfirm={handleWalletConfirm}
         onRetry={handleWalletRetry}
       />
+
+      <MobilePaymentModal
+        open={isMobilePaymentModalOpen}
+        methodLabel={getMethodLabel()}
+        amount={formatCurrency(pricing.total)}
+        orderId={orderId}
+        stage={mobilePaymentModalStage}
+        compact={isCompact}
+        onClose={handleMobilePaymentClose}
+        onRetry={handleMobilePaymentRetry}
+      />
     </main>
   );
 }
@@ -641,7 +704,7 @@ const paymentStyles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    padding: "clamp(20px, 4vw, 40px) clamp(16px, 4vw, 28px)",
+    padding: "clamp(12px, 3vw, 40px) clamp(12px, 3vw, 28px)",
     background:
       "radial-gradient(circle at top, rgba(59, 130, 246, 0.16), transparent 30%), linear-gradient(180deg, #06121f 0%, #0b1728 48%, #08111d 100%)",
   },
@@ -663,21 +726,21 @@ const paymentStyles = {
   card: {
     position: "relative",
     overflow: "hidden",
-    borderRadius: "36px",
-    padding: "clamp(20px, 4vw, 36px)",
+    borderRadius: "clamp(24px, 5vw, 36px)",
+    padding: "clamp(16px, 3vw, 36px)",
     background: "rgba(8, 15, 27, 0.78)",
     border: "1px solid rgba(148, 163, 184, 0.16)",
     boxShadow: "0 28px 80px rgba(2, 6, 23, 0.55)",
     backdropFilter: "blur(18px)",
     color: "#f8fafc",
     display: "grid",
-    gap: "32px",
+    gap: "clamp(20px, 3vw, 32px)",
   },
   header: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    gap: "24px",
+    gap: "clamp(12px, 3vw, 24px)",
     flexWrap: "wrap",
   },
   headerLeft: {
@@ -713,7 +776,7 @@ const paymentStyles = {
   },
   heading: {
     margin: 0,
-    fontSize: "clamp(2rem, 6vw, 2.8rem)",
+    fontSize: "clamp(1.6rem, 5vw, 2.8rem)",
     lineHeight: 1,
     letterSpacing: "-0.04em",
     fontWeight: 800,
@@ -737,20 +800,20 @@ const paymentStyles = {
   },
   layout: {
     display: "grid",
-    gap: "clamp(20px, 3vw, 28px)",
+    gap: "clamp(16px, 2.5vw, 28px)",
     alignItems: "start",
   },
   leftColumn: {
     display: "grid",
-    gap: "24px",
+    gap: "clamp(14px, 2.5vw, 24px)",
   },
   rightColumn: {
     display: "grid",
-    gap: "24px",
+    gap: "clamp(14px, 2.5vw, 24px)",
   },
   productCard: {
-    padding: "30px",
-    borderRadius: "30px",
+    padding: "clamp(16px, 4vw, 30px)",
+    borderRadius: "clamp(24px, 5vw, 30px)",
     background:
       "linear-gradient(145deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.92) 60%, rgba(51, 65, 85, 0.9) 100%)",
     border: "1px solid rgba(148, 163, 184, 0.14)",
@@ -792,7 +855,7 @@ const paymentStyles = {
   },
   divider: {
     height: "1px",
-    margin: "28px 0",
+    margin: "clamp(12px, 3vw, 28px) 0",
     background:
       "linear-gradient(90deg, rgba(148, 163, 184, 0), rgba(148, 163, 184, 0.3), rgba(148, 163, 184, 0))",
   },
@@ -800,7 +863,7 @@ const paymentStyles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "flex-end",
-    gap: "24px",
+    gap: "clamp(12px, 3vw, 24px)",
     flexWrap: "wrap",
   },
   amountLabel: {
@@ -809,8 +872,8 @@ const paymentStyles = {
     fontSize: "0.88rem",
   },
   amountValue: {
-    margin: "12px 0 0",
-    fontSize: "2.8rem",
+    margin: "clamp(6px, 2vw, 12px) 0 0",
+    fontSize: "clamp(1.8rem, 5vw, 2.8rem)",
     lineHeight: 0.95,
     letterSpacing: "-0.06em",
     fontWeight: 800,
@@ -836,8 +899,8 @@ const paymentStyles = {
   },
   buttonWrap: {
     display: "grid",
-    gap: "18px",
-    paddingTop: "4px",
+    gap: "clamp(10px, 2vw, 18px)",
+    paddingTop: "clamp(0px, 1vw, 4px)",
   },
   loaderWrap: {
     display: "flex",

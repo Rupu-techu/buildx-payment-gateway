@@ -1,5 +1,4 @@
-import StatePanel from "./StatePanel.jsx";
-import { couponCatalog, formatCurrency } from "../utils/pricing.js";
+import { formatCurrency } from "../utils/pricing.js";
 
 function OrderSummary({
   cartItems,
@@ -160,31 +159,6 @@ function OrderSummary({
         <p style={labelStyle}>Coupon Code</p>
         <div
           style={{
-            display: "flex",
-            gap: "8px",
-            flexWrap: "wrap",
-          }}
-        >
-          {Object.values(couponCatalog).map((coupon) => (
-            <span key={coupon.code} style={couponTagStyle}>
-              {coupon.code}: {coupon.label}
-            </span>
-          ))}
-          {appliedCoupon ? (
-            <span
-              style={{
-                ...couponTagStyle,
-                color: "#6ee7b7",
-                border: "1px solid rgba(52, 211, 153, 0.24)",
-                backgroundColor: "rgba(16, 185, 129, 0.12)",
-              }}
-            >
-              Active: {appliedCoupon}
-            </span>
-          ) : null}
-        </div>
-        <div
-          style={{
             display: "grid",
             gridTemplateColumns: isCompact
               ? "minmax(0, 1fr)"
@@ -196,7 +170,7 @@ function OrderSummary({
             type="text"
             value={couponCode}
             onChange={(event) => onCouponChange(event.target.value)}
-            placeholder="Use SAVE10 or FIRST50"
+            placeholder="SAVE10 or FIRST50"
             style={inputStyle}
           />
           <button
@@ -209,28 +183,44 @@ function OrderSummary({
           </button>
         </div>
 
-        {pricing.couponStatus === "invalid" ? (
-          <StatePanel
-            eyebrow="Invalid Coupon"
-            title="That coupon could not be applied"
-            message={pricing.couponMessage}
-            variant="warning"
-            actionLabel={onClearCoupon ? "Clear Coupon" : undefined}
-            onAction={onClearCoupon}
-            compact
-          />
-        ) : (
+        {appliedCoupon ? (
           <p
             style={{
               margin: 0,
-              color: pricing.couponStatus === "applied" ? "#6ee7b7" : "#94a3b8",
+              color: "#6ee7b7",
+              fontSize: "0.86rem",
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            <span>✓</span>
+            {appliedCoupon} applied
+          </p>
+        ) : null}
+
+        {pricing.couponStatus === "invalid" ? (
+          <p
+            style={{
+              margin: 0,
+              color: "#fca5a5",
               fontSize: "0.84rem",
-              lineHeight: 1.5,
             }}
           >
             {pricing.couponMessage}
           </p>
-        )}
+        ) : pricing.couponStatus === "applied" ? (
+          <p
+            style={{
+              margin: 0,
+              color: "#6ee7b7",
+              fontSize: "0.84rem",
+            }}
+          >
+            {pricing.couponMessage}
+          </p>
+        ) : null}
       </div>
 
       <div
@@ -332,17 +322,5 @@ const couponButtonStyle = (disabled) => ({
   fontWeight: 700,
   cursor: disabled ? "not-allowed" : "pointer",
 });
-
-const couponTagStyle = {
-  display: "inline-flex",
-  alignItems: "center",
-  padding: "9px 12px",
-  borderRadius: "999px",
-  backgroundColor: "rgba(255, 255, 255, 0.05)",
-  border: "1px solid rgba(148, 163, 184, 0.12)",
-  color: "#cbd5e1",
-  fontSize: "0.76rem",
-  fontWeight: 600,
-};
 
 export default OrderSummary;
