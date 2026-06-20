@@ -92,6 +92,35 @@ backend/
  ├── routes/
  └── database/
 ```
+# 📸 Application Screenshots
+
+## 🛒 Cart & Checkout
+
+
+
+<img width="1918" height="1078" alt="Screenshot 2026-06-20 100216" src="https://github.com/user-attachments/assets/1eb47027-7a35-4045-b8ab-65d9bcfd06c1" />
+
+
+## 💳 Payment Methods
+
+
+<img width="1918" height="1078" alt="Screenshot 2026-06-20 100226" src="https://github.com/user-attachments/assets/07be50c2-f4f7-46bd-90e4-5e237958c65f" />
+
+
+## 🏦 Net Banking & UPI
+
+
+
+<img width="1918" height="1078" alt="Screenshot 2026-06-20 100246" src="https://github.com/user-attachments/assets/2f2ef08f-df35-4e26-9bfa-c035d30a4264" />
+
+
+## ✅ Payment Success
+
+<img width="1918" height="1078" alt="Screenshot 2026-06-20 100434" src="https://github.com/user-attachments/assets/e96e074e-0470-4d06-8acd-30ba32a0a479" />
+
+<img width="1918" height="1078" alt="Screenshot 2026-06-20 100444" src="https://github.com/user-attachments/assets/ca92d0db-2582-44f4-9e00-08001f7490b2" />
+
+
 
 ---
 
